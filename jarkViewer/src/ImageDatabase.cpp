@@ -1068,7 +1068,7 @@ cv::Mat ImageDatabase::loadPSD(wstring_view path, const vector<uint8_t>& buf) {
                 img = cv::Mat(document->height, document->width, CV_8UC4, image8).clone();
             }
             else if (document->bitsPerChannel == 16) {
-                cv::Mat(document->height, document->width, CV_16UC4, image16).convertTo(img, CV_8UC4, 1.0 / 256);
+                cv::Mat(document->height, document->width, CV_16UC4, image16).convertTo(img, CV_8UC4, 255.0 / 65535.0);
             }
             else if (document->bitsPerChannel == 32) {
                 cv::Mat(document->height, document->width, CV_32FC4, image32).convertTo(img, CV_8UC4, 255.0);
@@ -1302,6 +1302,124 @@ cv::Mat ImageDatabase::loadJXR(wstring_view path, const vector<uint8_t>& buf) {
     return mat;
 }
 
+static std::string parseMatInfo(wstring_view path, cv::Mat& image) {
+    std::ostringstream oss;
+    oss << "图像信息：" << jarkUtils::wstringToUtf8(path) << "\n";
+
+    if (image.empty()) {
+        oss << "图像为空，无法解析信息";
+        return oss.str();
+    }
+
+    oss << "宽度：" << image.cols << "\n";
+    oss << "高度：" << image.rows << "\n";
+
+    int channels = image.channels();
+    oss << "通道：" << channels << "\n";
+
+    int depth = image.depth();
+    std::string depthStr;
+    switch (depth) {
+    case CV_8U:  depthStr = "8U (8位无符号)"; break;
+    case CV_8S:  depthStr = "8S (8位有符号)"; break;
+    case CV_16U: depthStr = "16U (16位无符号)"; break;
+    case CV_16S: depthStr = "16S (16位有符号)"; break;
+    case CV_32S: depthStr = "32S (32位有符号整数)"; break;
+    case CV_32F: depthStr = "32F (32位浮点)"; break;
+    case CV_64F: depthStr = "64F (64位浮点)"; break;
+    default:     depthStr = "未知类型 (" + std::to_string(depth) + ")"; break;
+    }
+    oss << "位深度：" << depthStr << "\n";
+
+    int type = image.type();
+    oss << "数据类型：" << type << " (CV_"
+        << ((depth == CV_8U) ? "8U" :
+            (depth == CV_8S) ? "8S" :
+            (depth == CV_16U) ? "16U" :
+            (depth == CV_16S) ? "16S" :
+            (depth == CV_32S) ? "32S" :
+            (depth == CV_32F) ? "32F" :
+            (depth == CV_64F) ? "64F" : "UNKNOWN")
+        << "C" << channels << ")\n";
+
+    oss << "总像素数：" << (static_cast<int64_t>(image.rows) * image.cols) << "\n";
+    oss << "总字节数：" << image.total() * image.elemSize() << "\n";
+    oss << "每像素字节数：" << image.elemSize() << "\n";
+    oss << "每通道字节数：" << image.elemSize1() << "\n";
+    oss << "内存连续：" << (image.isContinuous() ? "是" : "否") << "\n";
+    oss << "步长(行距)：" << image.step << " 字节\n";
+
+    if (channels == 1) {
+        oss << "色彩空间：灰度图\n";
+    }
+    else if (channels == 3) {
+        oss << "色彩空间：RGB/BGR（需根据读取方式确认）\n";
+    }
+    else if (channels == 4) {
+        oss << "色彩空间：RGBA/BGRA（含Alpha通道）\n";
+    }
+    else {
+        oss << "色彩空间：多通道(" << channels << "通道)\n";
+    }
+
+    if (depth == CV_8U) {
+        oss << "注：通常由 imread 读取的图像为8位无符号整数\n";
+    }
+
+    return oss.str();
+}
+
+// 只接受 8 位通道
+static void convertMatToCV_8U(cv::Mat& mat) {
+    if (mat.empty() || mat.depth() == CV_8U)
+        return;
+
+    switch (mat.depth()) {
+    case CV_16U: {
+        // 16位无符号整型：线性缩放到 [0, 255]
+        mat.convertTo(mat, CV_8U, 255.0 / 65535.0);
+        break;
+    }
+    case CV_32F: {
+        // 浮点型：检测是否在 [0,1] 范围内，若是则直接乘255，否则动态缩放
+        double minVal, maxVal;
+        cv::minMaxLoc(mat, &minVal, &maxVal);
+
+        if (minVal >= 0.0 && maxVal <= 1.0) {
+            // 假设是标准归一化浮点图（如来自深度学习模型或HDR解码）
+            mat.convertTo(mat, CV_8U, 255.0);
+        }
+        else if (minVal == maxVal) {
+            mat.convertTo(mat, CV_8U, 0.0, 127.5);
+        }
+        else {
+            // 通用动态范围缩放（如 [0,1000] 或 [-10, 200]，虽罕见但安全）
+            mat.convertTo(mat, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
+        }
+        break;
+    }
+    default: {
+        // 其他罕见情况（如 CV_64F），统一动态缩放（保守兜底）
+        double minVal, maxVal;
+        cv::minMaxLoc(mat, &minVal, &maxVal);
+        if (minVal == maxVal) {
+            mat.convertTo(mat, CV_8U, 0.0, 127.5);
+        }
+        else {
+            mat.convertTo(mat, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
+        }
+        break;
+    }
+    }
+}
+
+static void convertImageAssetToCV_8U(ImageAsset& imageAsset) {
+    convertMatToCV_8U(imageAsset.primaryFrame);
+    for (auto& frame : imageAsset.frames) {
+        convertMatToCV_8U(frame);
+    }
+}
+
 // 已支持 gif apng png webp 动图
 ImageAsset ImageDatabase::loadAnimation(wstring_view path, const vector<uint8_t>& buf) {
     cv::Animation animation;
@@ -1352,23 +1470,9 @@ cv::Mat ImageDatabase::loadMat(wstring_view path, const vector<uint8_t>& buf) {
         return {};
     }
 
-    // enum { CV_8U=0, CV_8S=1, CV_16U=2, CV_16S=3, CV_32S=4, CV_32F=5, CV_64F=6 }
-    if (img.depth() <= 1) {
-        return img;
-    }
-    else if (img.depth() <= 3) {
-        cv::Mat tmp;
-        img.convertTo(tmp, CV_8U, 1.0 / 256);
-        return tmp;
-    }
-    else if (img.depth() <= 5) {
-        cv::Mat tmp;
-        img.convertTo(tmp, CV_8U, 1.0 / 65536);
-        return tmp;
-    }
-    jarkUtils::log("Special: {}, img.depth(): {}, img.channels(): {}",
-        jarkUtils::wstringToUtf8(path), img.depth(), img.channels());
-    return {};
+    convertMatToCV_8U(img);
+
+    return img;
 }
 
 
@@ -1769,7 +1873,7 @@ ImageAsset ImageDatabase::loadMotionPhoto(wstring_view path, const vector<uint8_
     return { ImageFormat::Animated, img, frames, std::vector<int>(frames.size(), 33),  exifInfo };
 }
 
-ImageAsset ImageDatabase::loader(const wstring& path) {
+ImageAsset ImageDatabase::myLoader(const wstring& path) {
     FunctionTimeCount FunctionTimeCount(__func__);
     jarkUtils::log("loading: {}", jarkUtils::wstringToUtf8(path));
 
@@ -1964,4 +2068,11 @@ ImageAsset ImageDatabase::loader(const wstring& path) {
         img = getErrorTipsMat();
 
     return { ImageFormat::Still, std::move(img), {}, {}, exifInfo };
+}
+
+ImageAsset ImageDatabase::loader(const wstring& path) {
+    auto imageAsset = myLoader(path);
+    jarkUtils::log(parseMatInfo(path, imageAsset.primaryFrame));
+    convertImageAssetToCV_8U(imageAsset);
+    return imageAsset;
 }

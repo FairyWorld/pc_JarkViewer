@@ -375,8 +375,8 @@ public:
         jarkUtils::overlayImg(squareMat, buttonPrint, 600, 0);
         jarkUtils::overlayImg(squareMat, trackbarBg, 0, 50);
 
-        textDrawer.putAlignLeft(squareMat, { 120, 60, 200, 900 }, std::format("{}", params.brightness).c_str(), { 0, 0, 0, 255 });
-        textDrawer.putAlignLeft(squareMat, { 120, 110, 200, 900 }, std::format("{}", params.contrast).c_str(), { 0, 0, 0, 255 });
+        textDrawer.putAlignLeft(squareMat, { 120, 60, 200, 900 }, std::format("{:3} %", params.brightness).c_str(), { 0, 0, 0, 255 });
+        textDrawer.putAlignLeft(squareMat, { 120, 110, 200, 900 }, std::format("{:3} %", params.contrast).c_str(), { 0, 0, 0, 255 });
 
         drawProgressBar(squareMat, { 250, 60, 500, 30 }, params.brightness / 200.0);
         drawProgressBar(squareMat, { 250, 110, 500, 30 }, params.contrast / 200.0);

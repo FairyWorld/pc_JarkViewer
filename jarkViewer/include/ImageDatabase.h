@@ -343,5 +343,6 @@ public:
     ImageAsset loadAnimation(wstring_view path, const vector<uint8_t>& buf);
 
     void handleExifOrientation(int orientation, cv::Mat& img);
+    ImageAsset myLoader(const wstring& path);
     ImageAsset loader(const wstring& path);
 };
