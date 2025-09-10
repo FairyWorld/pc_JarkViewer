@@ -420,7 +420,8 @@ LRESULT D2D1App::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             case WM_LBUTTONDOWN:
             case WM_MBUTTONDOWN:
             case WM_RBUTTONDOWN:
-                pD2DApp->OnMouseDown(message, LOWORD(lParam), HIWORD(lParam));
+            case WM_XBUTTONDOWN:
+                pD2DApp->OnMouseDown(message, LOWORD(lParam), HIWORD(lParam), wParam);
                 break;
 
             case WM_SIZE:
@@ -430,7 +431,8 @@ LRESULT D2D1App::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             case WM_LBUTTONUP:
             case WM_MBUTTONUP:
             case WM_RBUTTONUP:
-                pD2DApp->OnMouseUp(message, LOWORD(lParam), HIWORD(lParam));
+            case WM_XBUTTONUP:
+                pD2DApp->OnMouseUp(message, LOWORD(lParam), HIWORD(lParam), wParam);
                 break;
 
             case WM_MOUSEMOVE:
@@ -470,6 +472,12 @@ LRESULT D2D1App::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 result = 1;
                 wasHandled = true;
                 break;
+
+//#ifndef NDEBUG
+//            default: {
+//                JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)message);
+//            }break;
+//#endif
             }
         }
 

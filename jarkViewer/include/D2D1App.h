@@ -47,8 +47,8 @@ protected:
     void saveSettings() const;
 
     // 消息处理：鼠标
-    virtual void OnMouseDown(WPARAM btnState, int x, int y) {}
-    virtual void OnMouseUp(WPARAM btnState, int x, int y) {}
+    virtual void OnMouseDown(WPARAM btnState, int x, int y, WPARAM wParam) {}
+    virtual void OnMouseUp(WPARAM btnState, int x, int y, WPARAM wParam) {}
     virtual void OnMouseMove(WPARAM btnState, int x, int y) {}
     virtual void OnMouseLeave() {}
     virtual void OnMouseWheel(UINT nFlags, short zDelta, int x, int y) {}

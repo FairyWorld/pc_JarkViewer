@@ -362,8 +362,8 @@ public:
         }
     }
 
-    void OnMouseDown(WPARAM btnState, int x, int y) {
-        switch ((long long)btnState)
+    void OnMouseDown(WPARAM btnState, int x, int y, WPARAM wParam) {
+        switch ((uint64_t)btnState)
         {
         case WM_LBUTTONDOWN: {//左键
             if (cursorPos == CursorPos::centerArea) {
@@ -403,16 +403,31 @@ public:
         }
 
         case WM_MBUTTONDOWN: {//中键
+            operateQueue.push({ ActionENUM::toggleExif });
             return;
         }
 
-        default:
+        case WM_XBUTTONDOWN: {//侧键
+            WORD xButton = GET_XBUTTON_WPARAM(wParam);
+            if (xButton == XBUTTON1) {
+                operateQueue.push({ ActionENUM::nextImg });
+            }
+            else if (xButton == XBUTTON2) {
+                operateQueue.push({ ActionENUM::preImg });
+            }
             return;
+        }
+
+#ifndef NDEBUG
+        default: {
+            JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)btnState);
+        }break;
+#endif // NDEBUG
         }
     }
 
-    void OnMouseUp(WPARAM btnState, int x, int y) {
-        switch ((long long)btnState)
+    void OnMouseUp(WPARAM btnState, int x, int y, WPARAM wParam) {
+        switch ((uint64_t)btnState)
         {
         case WM_LBUTTONUP: {//左键
             mouseIsPressing = false;
@@ -426,12 +441,21 @@ public:
         }
 
         case WM_MBUTTONUP: {//中键
-            operateQueue.push({ ActionENUM::toggleExif });
             return;
         }
 
-        default:
+        case WM_XBUTTONUP: {//侧键
+            //WORD xButton = GET_XBUTTON_WPARAM(wParam);
+            //if (xButton == XBUTTON1){}
+            //else if (xButton == XBUTTON2){}
             return;
+        }
+
+#ifndef NDEBUG
+        default: {
+            JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)btnState);
+        }break;
+#endif // NDEBUG
         }
     }
 
@@ -802,7 +826,7 @@ public:
 
 #ifndef NDEBUG
             default: {
-                cout << "OnKeyDown KeyValue: " << (int)keyValue << '\n';
+                JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)keyValue);
             }break;
 #endif // NDEBUG
             }
@@ -816,11 +840,11 @@ public:
             ctrlIsPressing = false;
         }break;
 
-        default: {
 #ifndef NDEBUG
-            cout << "OnKeyUp KeyValue: " << (int)keyValue << '\n';
-#endif // NDEBUG
+        default: {
+            JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)keyValue);
         }break;
+#endif // NDEBUG
         }
     }
 
