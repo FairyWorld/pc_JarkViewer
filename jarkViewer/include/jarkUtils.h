@@ -491,7 +491,7 @@ public:
 
     void printTimeCountAndReset() {
         auto now = std::chrono::system_clock::now();
-        auto durations = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_clock).count());
+        auto durations = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_clock).count();
         start_clock = now;
         JARK_LOG("{}(): {} ms", funcName, durations);
     }
