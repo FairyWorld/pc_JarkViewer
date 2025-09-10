@@ -55,7 +55,7 @@ std::string ExifParse::handleMathDiv(string_view str) {
 
 std::string ExifParse::exifDataToString(wstring_view path, const Exiv2::ExifData& exifData) {
     if (exifData.empty()) {
-        jarkUtils::log("No EXIF data {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("No EXIF data {}", jarkUtils::wstringToUtf8(path));
         return "";
     }
 
@@ -385,7 +385,7 @@ std::string ExifParse::getExif(wstring_view path, const uint8_t* buf, size_t fil
             return "";
     }
     catch (Exiv2::Error& e) {
-        jarkUtils::log("Caught Exiv2 exception {}\n{}", jarkUtils::wstringToUtf8(path), e.what());
+        JARK_LOG("Caught Exiv2 exception {}\n{}", jarkUtils::wstringToUtf8(path), e.what());
         return "";
     }
     return "";

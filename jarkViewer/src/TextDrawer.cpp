@@ -178,9 +178,9 @@ void TextDrawer::Init(unsigned int idi, const wchar_t* type) {
     rc = jarkUtils::GetResource(idi, type);
 
     if (!stbtt_InitFont(&info, rc.ptr, 0)) {
-        jarkUtils::log("stbtt_InitFont failed");
+        JARK_LOG("stbtt_InitFont failed");
         if (idi != IDR_TTF_DEFAULT) {
-            jarkUtils::log("Reset to IDR_TTF_DEFAULT");
+            JARK_LOG("Reset to IDR_TTF_DEFAULT");
             Init(IDR_TTF_DEFAULT, L"TTF");
         }
         return;

@@ -18,7 +18,7 @@ private:
         // 初始化Media Foundation
         hr = MFStartup(MF_VERSION);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to initialize Media Foundation");
+            JARK_LOG("Failed to initialize Media Foundation");
             return hr;
         }
 
@@ -27,7 +27,7 @@ private:
         hr = MFCreateTempFile(MF_ACCESSMODE_READWRITE, MF_OPENMODE_DELETE_IF_EXIST,
             MF_FILEFLAGS_NONE, &pByteStream);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to create byte stream");
+            JARK_LOG("Failed to create byte stream");
             return hr;
         }
 
@@ -65,7 +65,7 @@ private:
         pByteStream->Release();
 
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to create source reader");
+            JARK_LOG("Failed to create source reader");
             return hr;
         }
 
@@ -86,7 +86,7 @@ private:
         IMFMediaType* pNativeType = nullptr;
         hr = m_pSourceReader->GetNativeMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, 0, &pNativeType);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to get native media type");
+            JARK_LOG("Failed to get native media type");
             return hr;
         }
 
@@ -95,7 +95,7 @@ private:
         if (SUCCEEDED(pNativeType->GetGUID(MF_MT_SUBTYPE, &subtype))) {
             char encodeStr[8] = { 0 };
             *((long*)encodeStr) = subtype.Data1;
-            jarkUtils::log("Native subtype: [{}]", encodeStr);
+            JARK_LOG("Native subtype: [{}]", encodeStr);
         }
 
         pNativeType->Release();
@@ -120,7 +120,7 @@ private:
 
         // 如果YUY2失败，尝试NV12
         if (FAILED(hr)) {
-            jarkUtils::log("YUY2 failed, trying NV12...");
+            JARK_LOG("YUY2 failed, trying NV12...");
             hr = m_pDecoderOutputType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
             if (SUCCEEDED(hr)) {
                 hr = m_pSourceReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
@@ -130,7 +130,7 @@ private:
 
         //如果NV12也失败，尝试RGB32
         if (FAILED(hr)) {
-            jarkUtils::log("YUY2 failed, trying RGB32...");
+            JARK_LOG("YUY2 failed, trying RGB32...");
             hr = m_pDecoderOutputType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
             if (SUCCEEDED(hr)) {
                 hr = m_pSourceReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
@@ -139,7 +139,7 @@ private:
         }
 
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to set any supported output format, HRESULT: 0x{:x}", hr);
+            JARK_LOG("Failed to set any supported output format, HRESULT: 0x{:x}", hr);
         }
         else {
             // 获取并确认最终设置的媒体类型
@@ -149,7 +149,7 @@ private:
                 if (SUCCEEDED(pCurrentType->GetGUID(MF_MT_SUBTYPE, &m_outputFormat))) {
                     char outputFormat[8] = { 0 };
                     *((long*)outputFormat) = m_outputFormat.Data1;
-                    jarkUtils::log("Successfully set output format: [{}]", outputFormat);
+                    JARK_LOG("Successfully set output format: [{}]", outputFormat);
                 }
                 pCurrentType->Release();
             }
@@ -162,7 +162,7 @@ private:
         std::vector<cv::Mat> frames;
 
         if (!m_initialized) {
-            jarkUtils::log("Decoder not initialized");
+            JARK_LOG("Decoder not initialized");
             return frames;
         }
 
@@ -175,7 +175,7 @@ private:
         IMFMediaType* pMediaType = nullptr;
         hr = m_pSourceReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_VIDEO_STREAM, &pMediaType);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to get media type");
+            JARK_LOG("Failed to get media type");
             return frames;
         }
 
@@ -190,11 +190,11 @@ private:
         pMediaType->Release();
 
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to get frame size");
+            JARK_LOG("Failed to get frame size");
             return frames;
         }
 
-        jarkUtils::log("Video dimensions: {}x{}", width, height);
+        JARK_LOG("Video dimensions: {}x{}", width, height);
 
         // 解码所有帧
         while (true) {
@@ -202,12 +202,12 @@ private:
                 0, nullptr, &streamFlags, &timeStamp, &pSample);
 
             if (FAILED(hr)) {
-                jarkUtils::log("Failed to read sample");
+                JARK_LOG("Failed to read sample");
                 break;
             }
 
             if (streamFlags & MF_SOURCE_READERF_ENDOFSTREAM) {
-                jarkUtils::log("End of stream reached");
+                JARK_LOG("End of stream reached");
                 break;
             }
 
@@ -230,7 +230,7 @@ private:
 
         hr = pSample->ConvertToContiguousBuffer(&pBuffer);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to convert to contiguous buffer");
+            JARK_LOG("Failed to convert to contiguous buffer");
             return cv::Mat();
         }
 
@@ -240,7 +240,7 @@ private:
         hr = pBuffer->Lock(&pData, &maxLength, &currentLength);
         if (FAILED(hr)) {
             pBuffer->Release();
-            jarkUtils::log("Failed to lock buffer");
+            JARK_LOG("Failed to lock buffer");
             return cv::Mat();
         }
 
@@ -260,7 +260,7 @@ private:
             cv::flip(result, result, 0);
         }
         else {
-            jarkUtils::log("Unsupported format for conversion");
+            JARK_LOG("Unsupported format for conversion");
         }
 
         // 应用旋转
@@ -305,7 +305,7 @@ public:
     static std::vector<cv::Mat> DecodeVideoFrames(const uint8_t* videoBuffer, size_t size) {
         HRESULT hr = Initialize(videoBuffer, size);
         if (FAILED(hr)) {
-            jarkUtils::log("Failed to initialize decoder, HRESULT: 0x{:x}", hr);
+            JARK_LOG("Failed to initialize decoder, HRESULT: 0x{:x}", hr);
             return {};
         }
 

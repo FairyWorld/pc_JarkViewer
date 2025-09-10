@@ -58,7 +58,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
     JxlDecoderStatus status = JxlDecoderSubscribeEvents(dec.get(),
         JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE);
     if (JXL_DEC_SUCCESS != status) {
-        jarkUtils::log("JxlDecoderSubscribeEvents failed\n{}\n{}",
+        JARK_LOG("JxlDecoderSubscribeEvents failed\n{}\n{}",
             jarkUtils::wstringToUtf8(path),
             jxlStatusCode2String(status));
         return imageAsset;
@@ -66,7 +66,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
 
     status = JxlDecoderSetParallelRunner(dec.get(), JxlResizableParallelRunner, runner.get());
     if (JXL_DEC_SUCCESS != status) {
-        jarkUtils::log("JxlDecoderSetParallelRunner failed\n{}\n{}",
+        JARK_LOG("JxlDecoderSetParallelRunner failed\n{}\n{}",
             jarkUtils::wstringToUtf8(path),
             jxlStatusCode2String(status));
         return imageAsset;
@@ -84,20 +84,20 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
         status = JxlDecoderProcessInput(dec.get());
 
         if (status == JXL_DEC_ERROR) {
-            jarkUtils::log("Decoder error\n{}\n{}",
+            JARK_LOG("Decoder error\n{}\n{}",
                 jarkUtils::wstringToUtf8(path),
                 jxlStatusCode2String(status));
             break;
         }
         else if (status == JXL_DEC_NEED_MORE_INPUT) {
-            jarkUtils::log("Error, already provided all input\n{}\n{}",
+            JARK_LOG("Error, already provided all input\n{}\n{}",
                 jarkUtils::wstringToUtf8(path),
                 jxlStatusCode2String(status));
             break;
         }
         else if (status == JXL_DEC_BASIC_INFO) {
             if (JXL_DEC_SUCCESS != JxlDecoderGetBasicInfo(dec.get(), &info)) {
-                jarkUtils::log("JxlDecoderGetBasicInfo failed\n{}\n{}",
+                JARK_LOG("JxlDecoderGetBasicInfo failed\n{}\n{}",
                     jarkUtils::wstringToUtf8(path),
                     jxlStatusCode2String(status));
                 break;
@@ -117,7 +117,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
             //if (JXL_DEC_SUCCESS !=
             //    JxlDecoderGetICCProfileSize(dec.get(), JXL_COLOR_PROFILE_TARGET_DATA,
             //        &icc_size)) {
-            //    jarkUtils::log("JxlDecoderGetICCProfileSize failed\n{}\n{}",
+            //    JARK_LOG("JxlDecoderGetICCProfileSize failed\n{}\n{}",
             //        jarkUtils::wstringToUtf8(path),
             //        jxlStatusCode2String(status));
             //    return mat;
@@ -126,7 +126,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
             //if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(
             //    dec.get(), JXL_COLOR_PROFILE_TARGET_DATA,
             //    icc_profile.data(), icc_profile.size())) {
-            //    jarkUtils::log("JxlDecoderGetColorAsICCProfile failed\n{}\n{}",
+            //    JARK_LOG("JxlDecoderGetColorAsICCProfile failed\n{}\n{}",
             //        jarkUtils::wstringToUtf8(path),
             //        jxlStatusCode2String(status));
             //    return mat;
@@ -137,14 +137,14 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
 
             status = JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size);
             if (JXL_DEC_SUCCESS != status) {
-                jarkUtils::log("JxlDecoderImageOutBufferSize failed\n{}\n{}",
+                JARK_LOG("JxlDecoderImageOutBufferSize failed\n{}\n{}",
                     jarkUtils::wstringToUtf8(path),
                     jxlStatusCode2String(status));
                 break;
             }
             auto byteSizeRequire = 4ULL * info.xsize * info.ysize;
             if (buffer_size != byteSizeRequire) {
-                jarkUtils::log("Invalid out buffer size {} {}\n{}\n{}",
+                JARK_LOG("Invalid out buffer size {} {}\n{}\n{}",
                     buffer_size, byteSizeRequire,
                     jarkUtils::wstringToUtf8(path),
                     jxlStatusCode2String(status));
@@ -153,7 +153,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
             image = cv::Mat(info.ysize, info.xsize, CV_8UC4);
             status = JxlDecoderSetImageOutBuffer(dec.get(), &format, image.ptr(), byteSizeRequire);
             if (JXL_DEC_SUCCESS != status) {
-                jarkUtils::log("JxlDecoderSetImageOutBuffer failed\n{}\n{}",
+                JARK_LOG("JxlDecoderSetImageOutBuffer failed\n{}\n{}",
                     jarkUtils::wstringToUtf8(path),
                     jxlStatusCode2String(status));
                 break;
@@ -172,7 +172,7 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
             break;
         }
         else {
-            jarkUtils::log("Unknown decoder status\n{}\n{}",
+            JARK_LOG("Unknown decoder status\n{}\n{}",
                 jarkUtils::wstringToUtf8(path),
                 jxlStatusCode2String(status));
             break;
@@ -322,7 +322,7 @@ ImageAsset ImageDatabase::loadWP2(wstring_view path, const std::vector<uint8_t>&
 #ifndef NDEBUG
     auto status = decoder.GetStatus();
     if (status != WP2_STATUS_OK) {
-        jarkUtils::log("ERROR: {}\n{}", jarkUtils::wstringToUtf8(path), statusExplain(status));
+        JARK_LOG("ERROR: {}\n{}", jarkUtils::wstringToUtf8(path), statusExplain(status));
     }
 #endif
 
@@ -346,7 +346,7 @@ ImageAsset ImageDatabase::loadWP2(wstring_view path, const std::vector<uint8_t>&
 ImageAsset ImageDatabase::loadBPG(wstring_view path, const std::vector<uchar>& buf) {
     auto decoderContext = bpg_decoder_open();
     if (bpg_decoder_decode(decoderContext, buf.data(), (int)buf.size()) < 0) {
-        jarkUtils::log("cvMat cannot decode: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("cvMat cannot decode: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -424,19 +424,19 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
 
     auto filetype_check = heif_check_filetype(buf.data(), 12);
     if (filetype_check == heif_filetype_no) {
-        jarkUtils::log("Input file is not an HEIF file: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Input file is not an HEIF file: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
     if (filetype_check == heif_filetype_yes_unsupported) {
-        jarkUtils::log("Input file is an unsupported HEIF file type: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Input file is an unsupported HEIF file type: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
     heif_context* ctx = heif_context_alloc();
     auto err = heif_context_read_from_memory_without_copy(ctx, buf.data(), buf.size(), nullptr);
     if (err.code) {
-        jarkUtils::log("heif_context_read_from_memory_without_copy error: {} {}", jarkUtils::wstringToUtf8(path), err.message);
+        JARK_LOG("heif_context_read_from_memory_without_copy error: {} {}", jarkUtils::wstringToUtf8(path), err.message);
         return {};
     }
 
@@ -444,7 +444,7 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
     heif_image_handle* handle = nullptr;
     err = heif_context_get_primary_image_handle(ctx, &handle);
     if (err.code) {
-        jarkUtils::log("heif_context_get_primary_image_handle error: {} {}", jarkUtils::wstringToUtf8(path), err.message);
+        JARK_LOG("heif_context_get_primary_image_handle error: {} {}", jarkUtils::wstringToUtf8(path), err.message);
         if (ctx) heif_context_free(ctx);
         if (handle) heif_image_handle_release(handle);
         return {};
@@ -454,8 +454,8 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
     heif_image* img = nullptr;
     err = heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, nullptr);
     if (err.code) {
-        jarkUtils::log("Error: {}", jarkUtils::wstringToUtf8(path));
-        jarkUtils::log("heif_decode_image error: {}", err.message);
+        JARK_LOG("Error: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("heif_decode_image error: {}", err.message);
         if (ctx) heif_context_free(ctx);
         if (handle) heif_image_handle_release(handle);
         if (img) heif_image_release(img);
@@ -487,13 +487,13 @@ ImageAsset ImageDatabase::loadAvif(wstring_view path, const std::vector<uint8_t>
     ImageAsset imageAsset;
 
     if (fileBuf.empty()) {
-        jarkUtils::log("Empty input buffer");
+        JARK_LOG("Empty input buffer");
         return imageAsset;
     }
 
     avifDecoder* decoder = avifDecoderCreate();
     if (!decoder) {
-        jarkUtils::log("Failed to create AVIF decoder");
+        JARK_LOG("Failed to create AVIF decoder");
         return imageAsset;
     }
 
@@ -510,13 +510,13 @@ ImageAsset ImageDatabase::loadAvif(wstring_view path, const std::vector<uint8_t>
 
     avifResult result = avifDecoderSetIOMemory(decoder, fileBuf.data(), fileBuf.size());
     if (result != AVIF_RESULT_OK) {
-        jarkUtils::log("Failed to set IO memory: {}",avifResultToString(result));
+        JARK_LOG("Failed to set IO memory: {}",avifResultToString(result));
         return imageAsset;
     }
 
     result = avifDecoderParse(decoder);
     if (result != AVIF_RESULT_OK) {
-        jarkUtils::log("Failed to parse AVIF: {}", avifResultToString(result));
+        JARK_LOG("Failed to parse AVIF: {}", avifResultToString(result));
         return imageAsset;
     }
 
@@ -540,7 +540,7 @@ ImageAsset ImageDatabase::loadAvif(wstring_view path, const std::vector<uint8_t>
         result = avifImageYUVToRGB(decoder->image, &rgb);
         if (result != AVIF_RESULT_OK) {
             avifRGBImageFreePixels(&rgb);
-            jarkUtils::log("Failed to convert YUV to RGB: {}", avifResultToString(result));
+            JARK_LOG("Failed to convert YUV to RGB: {}", avifResultToString(result));
             return imageAsset;
         }
 
@@ -591,7 +591,7 @@ ImageAsset ImageDatabase::loadAvif(wstring_view path, const std::vector<uint8_t>
 
 cv::Mat ImageDatabase::loadRaw(wstring_view path, const vector<uint8_t>& buf) {
     if (buf.empty()) {
-        jarkUtils::log("Buf is empty: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Buf is empty: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -599,25 +599,25 @@ cv::Mat ImageDatabase::loadRaw(wstring_view path, const vector<uint8_t>& buf) {
 
     int ret = rawProcessor->open_buffer(buf.data(), buf.size());
     if (ret != LIBRAW_SUCCESS) {
-        jarkUtils::log("Cannot open RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
+        JARK_LOG("Cannot open RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
         return {};
     }
 
     ret = rawProcessor->unpack();
     if (ret != LIBRAW_SUCCESS) {
-        jarkUtils::log("Cannot unpack RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
+        JARK_LOG("Cannot unpack RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
         return {};
     }
 
     ret = rawProcessor->dcraw_process();
     if (ret != LIBRAW_SUCCESS) {
-        jarkUtils::log("Cannot process RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
+        JARK_LOG("Cannot process RAW file: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
         return {};
     }
 
     libraw_processed_image_t* image = rawProcessor->dcraw_make_mem_image(&ret);
     if (image == nullptr) {
-        jarkUtils::log("Cannot make image from RAW data: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
+        JARK_LOG("Cannot make image from RAW data: {} {}", jarkUtils::wstringToUtf8(path), libraw_strerror(ret));
         return {};
     }
 
@@ -635,7 +635,7 @@ cv::Mat ImageDatabase::loadRaw(wstring_view path, const vector<uint8_t>& buf) {
 cv::Mat ImageDatabase::readDibFromMemory(const uint8_t* data, size_t size) {
     // 确保有足够的数据用于DIB头
     if (size < sizeof(DibHeader)) {
-        jarkUtils::log("Insufficient data for DIB header. {}", size);
+        JARK_LOG("Insufficient data for DIB header. {}", size);
         return {};
     }
 
@@ -644,7 +644,7 @@ cv::Mat ImageDatabase::readDibFromMemory(const uint8_t* data, size_t size) {
 
     // 验证头大小是否符合预期
     if (header.headerSize != sizeof(DibHeader)) {
-        jarkUtils::log("Unsupported DIB header size {}", header.headerSize);
+        JARK_LOG("Unsupported DIB header size {}", header.headerSize);
         return {};
     }
 
@@ -657,8 +657,8 @@ cv::Mat ImageDatabase::readDibFromMemory(const uint8_t* data, size_t size) {
     // 确保有足够的数据用于调色板和像素数据
     //const size_t requireSize = (size_t)header.headerSize + paletteSize + header.imageSize; // header.imageSize偶尔大于size
     //if (size < requireSize) {
-    //    jarkUtils::log("Insufficient data for image.");
-    //    jarkUtils::log("requireSize {} givenSize {}", requireSize, size);
+    //    JARK_LOG("Insufficient data for image.");
+    //    JARK_LOG("requireSize {} givenSize {}", requireSize, size);
     //    return {};
     //}
 
@@ -750,7 +750,7 @@ cv::Mat ImageDatabase::readDibFromMemory(const uint8_t* data, size_t size) {
         break;
     }
     default:
-        jarkUtils::log("Unsupported bit count {}", header.bitCount);
+        JARK_LOG("Unsupported bit count {}", header.bitCount);
         return {};
     }
 
@@ -788,7 +788,7 @@ cv::Mat ImageDatabase::readDibFromMemory(const uint8_t* data, size_t size) {
 // https://github.com/corkami/pics/blob/master/binary/ico_bmp.png
 std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vector<uint8_t>& buf) {
     if (buf.size() < 6) {
-        jarkUtils::log("Invalid ICO file: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Invalid ICO file: {}", jarkUtils::wstringToUtf8(path));
         return { cv::Mat(),"" };
     }
 
@@ -796,14 +796,14 @@ std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vect
     std::vector<IconDirEntry> entries;
 
     if (numImages > 255) {
-        jarkUtils::log("numImages Error: {} {}", jarkUtils::wstringToUtf8(path), numImages);
+        JARK_LOG("numImages Error: {} {}", jarkUtils::wstringToUtf8(path), numImages);
         return { cv::Mat(),"" };
     }
 
     size_t offset = 6;
     for (int i = 0; i < numImages; ++i) {
         if (offset + sizeof(IconDirEntry) > buf.size()) {
-            jarkUtils::log("Invalid ICO file structure: {}", jarkUtils::wstringToUtf8(path));
+            JARK_LOG("Invalid ICO file structure: {}", jarkUtils::wstringToUtf8(path));
             return { cv::Mat(),"" };
         }
 
@@ -818,10 +818,10 @@ std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vect
 
         const size_t endOffset = size_t(entry.dataOffset) + entry.dataSize;
         if (endOffset > buf.size()) {
-            jarkUtils::log("Invalid image data offset or size: {}", jarkUtils::wstringToUtf8(path));
-            jarkUtils::log("endOffset {} fileBuf.size(): {}", endOffset, buf.size());
-            jarkUtils::log("entry.dataOffset {}", entry.dataOffset);
-            jarkUtils::log("entry.dataSize: {}", entry.dataSize);
+            JARK_LOG("Invalid image data offset or size: {}", jarkUtils::wstringToUtf8(path));
+            JARK_LOG("endOffset {} fileBuf.size(): {}", endOffset, buf.size());
+            JARK_LOG("entry.dataOffset {}", entry.dataOffset);
+            JARK_LOG("entry.dataSize: {}", entry.dataSize);
             continue;
         }
 
@@ -856,7 +856,7 @@ std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vect
             // Already BGRA
         }
         else {
-            jarkUtils::log("Unsupported image format");
+            JARK_LOG("Unsupported image format");
             img = getErrorTipsMat();
         }
 
@@ -898,13 +898,13 @@ cv::Mat ImageDatabase::loadPSD(wstring_view path, const vector<uint8_t>& buf) {
     psd::NativeFile file(&allocator);
 
     if (!file.OpenRead(path.data())) {
-        jarkUtils::log("Cannot open file {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Cannot open file {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
     psd::Document* document = CreateDocument(&file, &allocator);
     if (!document) {
-        jarkUtils::log("Cannot create document {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Cannot create document {}", jarkUtils::wstringToUtf8(path));
         file.Close();
         return {};
     }
@@ -912,7 +912,7 @@ cv::Mat ImageDatabase::loadPSD(wstring_view path, const vector<uint8_t>& buf) {
     // the sample only supports RGB colormode
     if (document->colorMode != psd::colorMode::RGB)
     {
-        jarkUtils::log("Document is not in RGB color mode {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Document is not in RGB color mode {}", jarkUtils::wstringToUtf8(path));
         DestroyDocument(document, &allocator);
         file.Close();
         return {};
@@ -1124,7 +1124,7 @@ cv::Mat ImageDatabase::loadTGA_HDR(wstring_view path, const vector<uint8_t>& buf
     uint8_t* pxData = stbi_load_from_memory(buf.data(), (int)buf.size(), &width, &height, &channels, 0);
 
     if (!pxData) {
-        jarkUtils::log("Failed to load image: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Failed to load image: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -1136,7 +1136,7 @@ cv::Mat ImageDatabase::loadTGA_HDR(wstring_view path, const vector<uint8_t>& buf
     case 4: cv_type = CV_8UC4; break;
     default:
         stbi_image_free(pxData);
-        jarkUtils::log("Unsupported number of channels:{} {}", channels, jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Unsupported number of channels:{} {}", channels, jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -1154,12 +1154,12 @@ cv::Mat ImageDatabase::loadSVG(wstring_view path, const vector<uint8_t>& buf) {
     if (!isInitFont) {
         isInitFont = true;
         auto rc = jarkUtils::GetResource(IDR_MSYHMONO_TTF, L"TTF");
-        jarkUtils::log("loadSVG initFont: size:{} ptr:{:x}", rc.size, (size_t)rc.ptr);
+        JARK_LOG("loadSVG initFont: size:{} ptr:{:x}", rc.size, (size_t)rc.ptr);
         if (!lunasvg_add_font_face_from_data("", false, false, rc.ptr, rc.size, nullptr, nullptr)) {
-            jarkUtils::log("loadSVG initFont Fail !!!\nlunasvg_add_font_face_from_data");
+            JARK_LOG("loadSVG initFont Fail !!!\nlunasvg_add_font_face_from_data");
         }
         else {
-            jarkUtils::log("loadSVG initFont Done!");
+            JARK_LOG("loadSVG initFont Done!");
         }
     }
 
@@ -1171,12 +1171,12 @@ cv::Mat ImageDatabase::loadSVG(wstring_view path, const vector<uint8_t>& buf) {
 
     auto document = lunasvg::Document::loadFromData(dataPtr, dataBytes);
     if (!document) {
-        jarkUtils::log("Failed to load SVG data {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Failed to load SVG data {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
     if (document->height() == 0 || document->width() == 0) {
-        jarkUtils::log("Failed to load SVG: height/width == 0 {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Failed to load SVG: height/width == 0 {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
     // 宽高比例
@@ -1197,7 +1197,7 @@ cv::Mat ImageDatabase::loadSVG(wstring_view path, const vector<uint8_t>& buf) {
 
     auto bitmap = document->renderToBitmap(width, height);
     if (bitmap.isNull()) {
-        jarkUtils::log("Failed to render SVG to bitmap {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("Failed to render SVG to bitmap {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -1332,14 +1332,6 @@ cv::Mat ImageDatabase::loadJXR(wstring_view path, const vector<uint8_t>& buf) {
 static std::string parseImageAssetInfo(wstring_view path, ImageAsset& imageAsset) {
     std::ostringstream oss;
     oss << "图像信息：" << jarkUtils::wstringToUtf8(path) << '\n';
-
-    auto fff = _wfopen(L"D:\\aa.txt", L"w");
-    if (fff) {
-        auto str = oss.str();
-        fwrite(str.data(), 1, str.length(), fff);
-        fclose(fff);
-    }
-
 
     auto& image = imageAsset.primaryFrame;
 
@@ -1512,12 +1504,12 @@ cv::Mat ImageDatabase::loadMat(wstring_view path, const vector<uint8_t>& buf) {
         img = cv::imdecode(buf, cv::IMREAD_UNCHANGED);
     }
     catch (cv::Exception e) {
-        jarkUtils::log("cvMat cannot decode: {} [{}]", jarkUtils::wstringToUtf8(path), e.what());
+        JARK_LOG("cvMat cannot decode: {} [{}]", jarkUtils::wstringToUtf8(path), e.what());
         return {};
     }
 
     if (img.empty()) {
-        jarkUtils::log("cvMat cannot decode: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("cvMat cannot decode: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -1525,7 +1517,7 @@ cv::Mat ImageDatabase::loadMat(wstring_view path, const vector<uint8_t>& buf) {
         cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
 
     if (img.channels() != 3 && img.channels() != 4) {
-        jarkUtils::log("cvMat unsupport channel: {}", img.channels());
+        JARK_LOG("cvMat unsupport channel: {}", img.channels());
         return {};
     }
 
@@ -1565,7 +1557,7 @@ static bool parsePFMHeader(const vector<uint8_t>& buf, int& width, int& height, 
         string dimLine;
         while (buf[offset] != '\n' && offset < maxOffset) dimLine += buf[offset++];
         if (sscanf(dimLine.c_str(), "%d", &height) != 1) {
-            jarkUtils::log("parsePFMHeader fail!");
+            JARK_LOG("parsePFMHeader fail!");
             return false;
         }
     }break;
@@ -1573,7 +1565,7 @@ static bool parsePFMHeader(const vector<uint8_t>& buf, int& width, int& height, 
     case 2:break;
 
     default: {
-        jarkUtils::log("parsePFMHeader fail!");
+        JARK_LOG("parsePFMHeader fail!");
         return false;
     }
     }
@@ -1934,16 +1926,16 @@ ImageAsset ImageDatabase::loadMotionPhoto(wstring_view path, const vector<uint8_
 
 ImageAsset ImageDatabase::myLoader(const wstring& path) {
     FunctionTimeCount FunctionTimeCount(__func__);
-    jarkUtils::log("loading: {}", jarkUtils::wstringToUtf8(path));
+    JARK_LOG("loading: {}", jarkUtils::wstringToUtf8(path));
 
     if (path.length() < 4) {
-        jarkUtils::log("path.length() < 4: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("path.length() < 4: {}", jarkUtils::wstringToUtf8(path));
         return { ImageFormat::Still, getErrorTipsMat(), {}, {}, "" };
     }
 
     auto f = _wfopen(path.data(), L"rb");
     if (f == nullptr) {
-        jarkUtils::log("path canot open: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("path canot open: {}", jarkUtils::wstringToUtf8(path));
         return { ImageFormat::Still, getErrorTipsMat(), {}, {}, "" };
     }
 
@@ -1952,7 +1944,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
     if (fileSize < 16) {
         fclose(f);
-        jarkUtils::log("path fileSize < 16: {}", jarkUtils::wstringToUtf8(path));
+        JARK_LOG("path fileSize < 16: {}", jarkUtils::wstringToUtf8(path));
         return { ImageFormat::Still, getErrorTipsMat(), {}, {}, "" };
     }
 
@@ -2150,7 +2142,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
 ImageAsset ImageDatabase::loader(const wstring& path) {
     auto imageAsset = myLoader(path);
-    jarkUtils::log(parseImageAssetInfo(path, imageAsset));
+    JARK_LOG(parseImageAssetInfo(path, imageAsset));
     convertImageAssetToCV_8U(imageAsset);
     return imageAsset;
 }

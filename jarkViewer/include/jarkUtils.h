@@ -76,12 +76,6 @@ using std::endl;
 #include<opencv2/highgui.hpp>
 
 
-#define TIME_COUNT_START auto start_clock = std::chrono::system_clock::now()
-#define TIME_COUNT_END jarkUtils::log("{}(): {} ms", __FUNCTION__, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_clock).count())
-#define TIME_COUNT_END_US jarkUtils::log("{}(): {} us", __FUNCTION__, std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start_clock).count())
-#define TIME_COUNT_END_NS jarkUtils::log("{}(): {} ns", __FUNCTION__, std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - start_clock).count())
-
-
 struct ThemeColor {
     uint32_t BG_COLOR;
     uint32_t BLACK_GRID_COLOR;
@@ -341,6 +335,12 @@ struct GlobalVar {
     static inline SettingParameter settingParameter;
 };
 
+#ifdef NDEBUG
+#define JARK_LOG(fmt, ...)
+#else
+#define JARK_LOG(fmt, ...) jarkUtils::log(fmt, ##__VA_ARGS__)
+#endif
+
 class jarkUtils {
 public:
 
@@ -474,12 +474,28 @@ public:
     std::chrono::system_clock::time_point start_clock;
 
     FunctionTimeCount(string_view funcName) : funcName(funcName) {
-        start_clock = std::chrono::system_clock::now();
+        reset();
     }
 
     ~FunctionTimeCount() {
-        jarkUtils::log("{}(): {} ms", funcName, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_clock).count());
+        printTimeCount();
     }
+
+    void reset() {
+        start_clock = std::chrono::system_clock::now();
+    }
+
+    void printTimeCount() {
+        JARK_LOG("{}(): {} ms", funcName, std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_clock).count());
+    }
+
+    void printTimeCountAndReset() {
+        auto now = std::chrono::system_clock::now();
+        auto durations = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_clock).count());
+        start_clock = now;
+        JARK_LOG("{}(): {} ms", funcName, durations);
+    }
+
 #else
     FunctionTimeCount(string_view funcName) {}
 #endif
