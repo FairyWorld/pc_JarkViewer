@@ -232,11 +232,11 @@ enum class ImageFormat {
 };
 
 struct ImageAsset {
-    ImageFormat format;                 // 图像类型：静态/动图/实况
-    cv::Mat primaryFrame;               // 静态图或实况的静态图
-    std::vector<cv::Mat> frames;        // 动态图或实况的视频
-    std::vector<int> frameDurations;    // 每帧时长
-    string exifInfo;                    // 图像EXIF等信息
+    ImageFormat format = ImageFormat::None;  // 图像类型：静态/动图/实况
+    cv::Mat primaryFrame;                    // 静态图或实况的静态图
+    std::vector<cv::Mat> frames;             // 动态图或实况的视频
+    std::vector<int> frameDurations;         // 每帧时长
+    string exifInfo;                         // 图像EXIF等信息
 };
 
 enum class ActionENUM:int64_t {

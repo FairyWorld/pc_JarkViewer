@@ -103,7 +103,10 @@ ImageAsset ImageDatabase::loadJXL(wstring_view path, const vector<uint8_t>& buf)
                 break;
             }
 
-            duration_ms = info.animation.tps_numerator == 0 ? 0 : (info.animation.tps_denominator * 1000 / info.animation.tps_numerator);
+            duration_ms = info.animation.tps_numerator == 0 ? 16 : (info.animation.tps_denominator * 1000 / info.animation.tps_numerator);
+            if (duration_ms < 16)
+                duration_ms = 16;
+
             JxlResizableParallelRunnerSetThreads(
                 runner.get(),
                 JxlResizableParallelRunnerSuggestThreads(info.xsize, info.ysize));
@@ -409,7 +412,6 @@ ImageAsset ImageDatabase::loadBPG(wstring_view path, const std::vector<uchar>& b
 }
 
 
-// HEIC ONLY, AVIF not support
 // https://github.com/strukturag/libheif
 // vcpkg install libheif:x64-windows-static
 // vcpkg install libheif[hevc]:x64-windows-static
@@ -422,12 +424,12 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
 
     auto filetype_check = heif_check_filetype(buf.data(), 12);
     if (filetype_check == heif_filetype_no) {
-        jarkUtils::log("Input file is not an HEIF/AVIF file: {}", jarkUtils::wstringToUtf8(path));
+        jarkUtils::log("Input file is not an HEIF file: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
     if (filetype_check == heif_filetype_yes_unsupported) {
-        jarkUtils::log("Input file is an unsupported HEIF/AVIF file type: {}", jarkUtils::wstringToUtf8(path));
+        jarkUtils::log("Input file is an unsupported HEIF file type: {}", jarkUtils::wstringToUtf8(path));
         return {};
     }
 
@@ -481,84 +483,109 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
 // vcpkg install libavif[core,aom,dav1d]:x64-windows-static
 // https://github.com/AOMediaCodec/libavif/issues/1451#issuecomment-1606903425
 // TODO 部分图像仍不能正常解码
-cv::Mat ImageDatabase::loadAvif(wstring_view path, const vector<uint8_t>& buf) {
-    avifImage* image = avifImageCreateEmpty();
-    if (image == nullptr) {
-        jarkUtils::log("avifImageCreateEmpty failure: {}", jarkUtils::wstringToUtf8(path));
-        return {};
+ImageAsset ImageDatabase::loadAvif(wstring_view path, const std::vector<uint8_t>& fileBuf) {
+    ImageAsset imageAsset;
+
+    if (fileBuf.empty()) {
+        jarkUtils::log("Empty input buffer");
+        return imageAsset;
     }
 
     avifDecoder* decoder = avifDecoderCreate();
-    if (decoder == nullptr) {
-        jarkUtils::log("avifDecoderCreate failure: {}", jarkUtils::wstringToUtf8(path));
-        avifImageDestroy(image);
-        return {};
+    if (!decoder) {
+        jarkUtils::log("Failed to create AVIF decoder");
+        return imageAsset;
     }
 
-    decoder->strictFlags = AVIF_STRICT_DISABLED;  // 严格模式下，老旧的不标准格式会解码失败
+    // 使用RAII管理解码器
+    auto decoderGuard = std::unique_ptr<avifDecoder, decltype(&avifDecoderDestroy)>(
+        decoder, avifDecoderDestroy);
 
-    avifResult result = avifDecoderReadMemory(decoder, image, buf.data(), buf.size());
+    // 配置解码器
+    decoder->ignoreExif = AVIF_TRUE;
+    decoder->ignoreXMP = AVIF_TRUE;
+    decoder->strictFlags = AVIF_STRICT_DISABLED;
+    decoder->imageSizeLimit = AVIF_DEFAULT_IMAGE_SIZE_LIMIT;
+    decoder->imageDimensionLimit = AVIF_DEFAULT_IMAGE_DIMENSION_LIMIT;
+
+    avifResult result = avifDecoderSetIOMemory(decoder, fileBuf.data(), fileBuf.size());
     if (result != AVIF_RESULT_OK) {
-        jarkUtils::log("avifDecoderReadMemory failure: {} {}", jarkUtils::wstringToUtf8(path), avifResultToString(result));
-        avifImageDestroy(image);
-        avifDecoderDestroy(decoder);
-        return {};
+        jarkUtils::log("Failed to set IO memory: {}",avifResultToString(result));
+        return imageAsset;
     }
+
+    result = avifDecoderParse(decoder);
+    if (result != AVIF_RESULT_OK) {
+        jarkUtils::log("Failed to parse AVIF: {}", avifResultToString(result));
+        return imageAsset;
+    }
+
+    imageAsset.frames.reserve(decoder->imageCount);
+    imageAsset.frameDurations.reserve(decoder->imageCount);
 
     avifRGBImage rgb;
-    avifRGBImageSetDefaults(&rgb, image);
-    result = avifRGBImageAllocatePixels(&rgb);
-    if (result != AVIF_RESULT_OK) {
-        jarkUtils::log("avifRGBImageAllocatePixels failure: {} {}", jarkUtils::wstringToUtf8(path), avifResultToString(result));
-        avifImageDestroy(image);
-        avifDecoderDestroy(decoder);
-        return {};
-    }
+    avifRGBImageSetDefaults(&rgb, decoder->image);
 
-    rgb.format = AVIF_RGB_FORMAT_BGRA; // OpenCV is BGRA
-    result = avifImageYUVToRGB(image, &rgb);
-    if (result != AVIF_RESULT_OK) {
-        jarkUtils::log("avifImageYUVToRGB failure: {} {}", jarkUtils::wstringToUtf8(path), avifResultToString(result));
-        avifImageDestroy(image);
-        avifDecoderDestroy(decoder);
-        avifRGBImageFreePixels(&rgb);
-        return {};
-    }
+    while (avifDecoderNextImage(decoder) == AVIF_RESULT_OK) {
+        bool hasAlpha = decoder->image->alphaPlane != nullptr &&
+            decoder->image->alphaRowBytes > 0;
 
-    avifImageDestroy(image);
-    avifDecoderDestroy(decoder);
+        // 配置RGB输出格式
+        rgb.depth = 8;  // 强制8位输出
+        rgb.format = hasAlpha ? AVIF_RGB_FORMAT_BGRA : AVIF_RGB_FORMAT_BGR;
+        rgb.chromaUpsampling = AVIF_CHROMA_UPSAMPLING_BEST_QUALITY;
+        rgb.avoidLibYUV = AVIF_FALSE;  // 使用libyuv加速（如果可用）
 
-    auto ret = cv::Mat(rgb.height, rgb.width, CV_8UC4);
-    if (rgb.depth == 8) {
-        if (rgb.rowBytes == ret.step && rgb.rowBytes == rgb.width * 4) {
-            memcpy(ret.ptr(), rgb.pixels, (size_t)rgb.width * rgb.height * 4);
+        avifRGBImageAllocatePixels(&rgb);
+        result = avifImageYUVToRGB(decoder->image, &rgb);
+        if (result != AVIF_RESULT_OK) {
+            avifRGBImageFreePixels(&rgb);
+            jarkUtils::log("Failed to convert YUV to RGB: {}", avifResultToString(result));
+            return imageAsset;
+        }
+
+        cv::Mat frame;
+        if (hasAlpha) {
+            frame = cv::Mat(decoder->image->height, decoder->image->width, CV_8UC4,
+                rgb.pixels, rgb.rowBytes).clone();
         }
         else {
-            size_t minStep = rgb.rowBytes < ret.step ? (size_t)rgb.rowBytes : ret.step;
-            for (uint32_t y = 0; y < rgb.height; y++) {
-                memcpy(ret.ptr() + ret.step * y, rgb.pixels + rgb.rowBytes * y, minStep);
-            }
+            frame = cv::Mat(decoder->image->height, decoder->image->width, CV_8UC3,
+                rgb.pixels, rgb.rowBytes).clone();
         }
+
+        imageAsset.frames.push_back(frame);
+
+        // 计算帧时长
+        if (decoder->imageCount > 1 && decoder->timescale > 0) {
+            double durationInSeconds = (double)decoder->imageTiming.duration /
+                (double)decoder->timescale;
+            int durationMs = static_cast<int>(durationInSeconds * 1000.0 + 0.5);
+            imageAsset.frameDurations.push_back(std::max(16, durationMs));  // 至少16ms
+        }
+        else {
+            imageAsset.frameDurations.push_back(33);  // 静态图像
+        }
+
+        // 释放当前帧的RGB缓冲
+        avifRGBImageFreePixels(&rgb);
+    }
+
+    if (imageAsset.frames.empty()) {
+        imageAsset.format = ImageFormat::None;
+        imageAsset.primaryFrame = getErrorTipsMat();
+    }
+    else if (imageAsset.frames.size() == 1) {
+        imageAsset.format = ImageFormat::Still;
+        imageAsset.primaryFrame = std::move(imageAsset.frames[0]);
+        imageAsset.frames.clear();
+        imageAsset.frameDurations.clear();
     }
     else {
-        int bitShift = 2;
-        switch (rgb.depth) {
-        case 10: bitShift = 2; break;
-        case 12: bitShift = 4; break;
-        case 16: bitShift = 8; break;
-        }
-
-        for (uint32_t y = 0; y < rgb.height; y++) {
-            const uint16_t* src = (uint16_t*)(rgb.pixels + rgb.rowBytes * y);
-            uint8_t* dst = (uint8_t*)(ret.ptr() + ret.step * y);
-            for (uint32_t x = 0; x < rgb.width * 4; x++) {
-                dst[x] = (uint8_t)(src[x] >> bitShift);
-            }
-        }
+        imageAsset.format = ImageFormat::Animated;
     }
 
-    avifRGBImageFreePixels(&rgb);
-    return ret;
+    return imageAsset;
 }
 
 
@@ -1302,68 +1329,100 @@ cv::Mat ImageDatabase::loadJXR(wstring_view path, const vector<uint8_t>& buf) {
     return mat;
 }
 
-static std::string parseMatInfo(wstring_view path, cv::Mat& image) {
+static std::string parseImageAssetInfo(wstring_view path, ImageAsset& imageAsset) {
     std::ostringstream oss;
-    oss << "图像信息：" << jarkUtils::wstringToUtf8(path) << "\n";
+    oss << "图像信息：" << jarkUtils::wstringToUtf8(path) << '\n';
 
-    if (image.empty()) {
+    auto fff = _wfopen(L"D:\\aa.txt", L"w");
+    if (fff) {
+        auto str = oss.str();
+        fwrite(str.data(), 1, str.length(), fff);
+        fclose(fff);
+    }
+
+
+    auto& image = imageAsset.primaryFrame;
+
+    if (image.empty() && imageAsset.frames.empty() && imageAsset.exifInfo.empty()) {
         oss << "图像为空，无法解析信息";
         return oss.str();
     }
 
-    oss << "宽度：" << image.cols << "\n";
-    oss << "高度：" << image.rows << "\n";
+    if (!image.empty()) {
+        oss << "====== 主图信息 ======\n";
 
-    int channels = image.channels();
-    oss << "通道：" << channels << "\n";
+        oss << "宽度：" << image.cols << '\n';
+        oss << "高度：" << image.rows << '\n';
 
-    int depth = image.depth();
-    std::string depthStr;
-    switch (depth) {
-    case CV_8U:  depthStr = "8U (8位无符号)"; break;
-    case CV_8S:  depthStr = "8S (8位有符号)"; break;
-    case CV_16U: depthStr = "16U (16位无符号)"; break;
-    case CV_16S: depthStr = "16S (16位有符号)"; break;
-    case CV_32S: depthStr = "32S (32位有符号整数)"; break;
-    case CV_32F: depthStr = "32F (32位浮点)"; break;
-    case CV_64F: depthStr = "64F (64位浮点)"; break;
-    default:     depthStr = "未知类型 (" + std::to_string(depth) + ")"; break;
+        int channels = image.channels();
+        oss << "通道：" << channels << '\n';
+
+        int depth = image.depth();
+        std::string depthStr;
+        switch (depth) {
+        case CV_8U:  depthStr = "8U (8位无符号)"; break;
+        case CV_8S:  depthStr = "8S (8位有符号)"; break;
+        case CV_16U: depthStr = "16U (16位无符号)"; break;
+        case CV_16S: depthStr = "16S (16位有符号)"; break;
+        case CV_32S: depthStr = "32S (32位有符号整数)"; break;
+        case CV_32F: depthStr = "32F (32位浮点)"; break;
+        case CV_64F: depthStr = "64F (64位浮点)"; break;
+        default:     depthStr = "未知类型 (" + std::to_string(depth) + ")"; break;
+        }
+        oss << "位深度：" << depthStr << '\n';
+
+        int type = image.type();
+        oss << "数据类型：" << type << " (CV_"
+            << ((depth == CV_8U) ? "8U" :
+                (depth == CV_8S) ? "8S" :
+                (depth == CV_16U) ? "16U" :
+                (depth == CV_16S) ? "16S" :
+                (depth == CV_32S) ? "32S" :
+                (depth == CV_32F) ? "32F" :
+                (depth == CV_64F) ? "64F" : "UNKNOWN")
+            << "C" << channels << ")\n";
+
+        oss << "总像素数：" << (static_cast<int64_t>(image.rows) * image.cols) << '\n';
+        oss << "总字节数：" << image.total() * image.elemSize() << '\n';
+        oss << "每像素字节数：" << image.elemSize() << '\n';
+        oss << "每通道字节数：" << image.elemSize1() << '\n';
+        oss << "内存连续：" << (image.isContinuous() ? "是" : "否") << '\n';
+        oss << "步长(行距)：" << image.step << " 字节\n";
+
+        if (channels == 1) {
+            oss << "色彩空间：灰度图\n";
+        }
+        else if (channels == 3) {
+            oss << "色彩空间：RGB/BGR（需根据读取方式确认）\n";
+        }
+        else if (channels == 4) {
+            oss << "色彩空间：RGBA/BGRA（含Alpha通道）\n";
+        }
+        else {
+            oss << "色彩空间：多通道(" << channels << "通道)\n";
+        }
+
+        if (depth == CV_8U) {
+            oss << "注：通常由 imread 读取的图像为8位无符号整数\n";
+        }
     }
-    oss << "位深度：" << depthStr << "\n";
 
-    int type = image.type();
-    oss << "数据类型：" << type << " (CV_"
-        << ((depth == CV_8U) ? "8U" :
-            (depth == CV_8S) ? "8S" :
-            (depth == CV_16U) ? "16U" :
-            (depth == CV_16S) ? "16S" :
-            (depth == CV_32S) ? "32S" :
-            (depth == CV_32F) ? "32F" :
-            (depth == CV_64F) ? "64F" : "UNKNOWN")
-        << "C" << channels << ")\n";
+    if (!imageAsset.frames.empty()) {
+        oss << "====== 动态帧信息 ======\n";
 
-    oss << "总像素数：" << (static_cast<int64_t>(image.rows) * image.cols) << "\n";
-    oss << "总字节数：" << image.total() * image.elemSize() << "\n";
-    oss << "每像素字节数：" << image.elemSize() << "\n";
-    oss << "每通道字节数：" << image.elemSize1() << "\n";
-    oss << "内存连续：" << (image.isContinuous() ? "是" : "否") << "\n";
-    oss << "步长(行距)：" << image.step << " 字节\n";
-
-    if (channels == 1) {
-        oss << "色彩空间：灰度图\n";
-    }
-    else if (channels == 3) {
-        oss << "色彩空间：RGB/BGR（需根据读取方式确认）\n";
-    }
-    else if (channels == 4) {
-        oss << "色彩空间：RGBA/BGRA（含Alpha通道）\n";
-    }
-    else {
-        oss << "色彩空间：多通道(" << channels << "通道)\n";
+        oss << "首帧宽度：" << imageAsset.frames[0].cols << '\n';
+        oss << "首帧高度：" << imageAsset.frames[0].rows << '\n';
+        oss << "帧数量：" << imageAsset.frames.size() << '\n';
+        oss << "各帧时长(ms): ";
+        int idx = 0;
+        for (const auto& duration : imageAsset.frameDurations) {
+            oss << std::format("[{}]{}, ", idx++, duration);
+        }
+        oss << '\n';
     }
 
-    if (depth == CV_8U) {
-        oss << "注：通常由 imread 读取的图像为8位无符号整数\n";
+    if (!imageAsset.exifInfo.empty()) {
+        oss << imageAsset.exifInfo;
     }
 
     return oss.str();
@@ -1913,6 +1972,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
         if (imageAsset.format == ImageFormat::None) {
             imageAsset.format = ImageFormat::Still;
+            imageAsset.primaryFrame = getErrorTipsMat();
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, 0, 0, fileBuf.data(), fileBuf.size());
             return imageAsset;
         }
@@ -1938,6 +1998,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
         if (imageAsset.format == ImageFormat::None) {
             imageAsset.format = ImageFormat::Still;
+            imageAsset.primaryFrame = getErrorTipsMat();
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, 0, 0, fileBuf.data(), fileBuf.size());
         }
         else if (imageAsset.format == ImageFormat::Still) {
@@ -1956,6 +2017,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
         if (imageAsset.format == ImageFormat::None) {
             imageAsset.format = ImageFormat::Still;
+            imageAsset.primaryFrame = getErrorTipsMat();
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, 0, 0, fileBuf.data(), fileBuf.size());
         }
         else if (imageAsset.format == ImageFormat::Still) {
@@ -1973,6 +2035,25 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
         auto imageAsset = loadWP2(path, fileBuf);
         if (imageAsset.format == ImageFormat::None) {
             imageAsset.format = ImageFormat::Still;
+            imageAsset.primaryFrame = getErrorTipsMat();
+            imageAsset.exifInfo = ExifParse::getSimpleInfo(path, 0, 0, fileBuf.data(), fileBuf.size());
+        }
+        else if (imageAsset.format == ImageFormat::Still) {
+            imageAsset.exifInfo = ExifParse::getSimpleInfo(path, imageAsset.primaryFrame.cols, imageAsset.primaryFrame.rows,
+                fileBuf.data(), fileBuf.size())
+                + ExifParse::getExif(path, fileBuf.data(), fileBuf.size());
+        }
+        else {
+            imageAsset.exifInfo = ExifParse::getSimpleInfo(path, imageAsset.frames[0].cols, imageAsset.frames[0].rows, fileBuf.data(), fileBuf.size())
+                + ExifParse::getExif(path, fileBuf.data(), fileBuf.size());
+        }
+        return imageAsset;
+    }
+    else if (ext == L"avif" || ext == L"avifs") { // avif 静态或动画
+        auto imageAsset = loadAvif(path, fileBuf);
+        if (imageAsset.format == ImageFormat::None) {
+            imageAsset.format = ImageFormat::Still;
+            imageAsset.primaryFrame = getErrorTipsMat();
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, 0, 0, fileBuf.data(), fileBuf.size());
         }
         else if (imageAsset.format == ImageFormat::Still) {
@@ -2002,10 +2083,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
     cv::Mat img;
     string exifInfo;
 
-    if (ext == L"avif" || ext == L"avifs") {
-        img = loadAvif(path, fileBuf);
-    }
-    else if (ext == L"jxr") {
+    if (ext == L"jxr") {
         img = loadJXR(path, fileBuf);
     }
     else if (ext == L"tga" || ext == L"hdr") {
@@ -2067,12 +2145,12 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
     if (img.empty())
         img = getErrorTipsMat();
 
-    return { ImageFormat::Still, std::move(img), {}, {}, exifInfo };
+    return { ImageFormat::Still, img, {}, {}, exifInfo };
 }
 
 ImageAsset ImageDatabase::loader(const wstring& path) {
     auto imageAsset = myLoader(path);
-    jarkUtils::log(parseMatInfo(path, imageAsset.primaryFrame));
+    jarkUtils::log(parseImageAssetInfo(path, imageAsset));
     convertImageAssetToCV_8U(imageAsset);
     return imageAsset;
 }

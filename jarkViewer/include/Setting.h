@@ -202,6 +202,9 @@ public:
             cv::rectangle(winCanvas, rect2, cv::Scalar(200, 200, 200, 255), -1);
             textDrawer.putAlignCenter(winCanvas, rect, btnTextList[i].c_str(), cv::Scalar(0, 0, 0, 255));
         }
+
+        const char* tips = "本软件原生绿色单文件，请把软件放置到合适位置再关联文件格式，若软件位置变化则需重新关联。\n若不再使用本软件，请点击【全不选】再点击【立即关联】即可移除所有关联关系。";
+        textDrawer.putAlignLeft(winCanvas, { 20, winHeight - 200, winWidth - 20, winHeight }, tips, cv::Scalar(0, 0, 0, 255));
     }
 
     void refreshHelpTab() {

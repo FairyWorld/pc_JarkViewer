@@ -332,9 +332,9 @@ public:
     cv::Mat loadPFM(wstring_view path, const vector<uint8_t>& buf);
     cv::Mat loadQOI(wstring_view path, const vector<uint8_t>& buf);
     cv::Mat loadHeic(wstring_view path, const vector<uint8_t>& buf);
-    cv::Mat loadAvif(wstring_view path, const vector<uint8_t>& buf);
     cv::Mat loadRaw(wstring_view path, const vector<uint8_t>& buf);
 
+    ImageAsset loadAvif(wstring_view path, const vector<uint8_t>& buf);
     ImageAsset loadJXL(wstring_view path, const vector<uint8_t>& buf);
     ImageAsset loadWP2(wstring_view path, const std::vector<uint8_t>& buf);
     ImageAsset loadBPG(wstring_view path, const std::vector<uchar>& buf);
