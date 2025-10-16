@@ -358,10 +358,10 @@ public:
                 }
 
                 if (SetupFileAssociations(checkedExtW, unCheckedExtW)) {
-                    MessageBoxW(nullptr, L"文件关联设置成功！", L"jarkViewer", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxW(nullptr, L"文件关联设置成功！", L"JarkViewer看图", MB_OK | MB_ICONINFORMATION);
                 }
                 else {
-                    MessageBoxW(nullptr, L"文件关联设置失败！", L"jarkViewer", MB_OK | MB_ICONERROR);
+                    MessageBoxW(nullptr, L"文件关联设置失败！", L"JarkViewer看图", MB_OK | MB_ICONERROR);
                 }
             }
         }

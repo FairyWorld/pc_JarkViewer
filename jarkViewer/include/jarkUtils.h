@@ -234,7 +234,7 @@ struct ImageAsset {
 };
 
 enum class ActionENUM:int64_t {
-    none = 0, newSize, slide, preImg, nextImg, firstImg, finalImg, zoomIn, zoomOut, toggleExif, toggleFullScreen, requestExit, normalFresh,
+    none = 0, newSize, slide, preImg, nextImg, firstImg, finalImg, zoomIn, zoomOut, zoomFix, toggleExif, toggleFullScreen, requestExit, normalFresh,
     rotateLeft, rotateRight, printImage, setting,
 };
 

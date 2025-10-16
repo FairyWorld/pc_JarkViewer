@@ -32,7 +32,7 @@ void D2D1App::loadSettings() {
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, appDataPath)))
         return;
 
-    GlobalVar::settingPath = std::wstring(appDataPath) + L"\\jarkViewer.db";
+    GlobalVar::settingPath = std::wstring(appDataPath) + L"\\JarkViewer.db";
 
     auto f = _wfopen(GlobalVar::settingPath.c_str(), L"rb");
     if (!f)

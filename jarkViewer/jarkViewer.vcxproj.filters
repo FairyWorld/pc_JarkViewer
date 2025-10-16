@@ -635,7 +635,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\jarkViewer.cpp">
+    <ClCompile Include="src\JarkViewer.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\D2D1App.cpp">
@@ -721,7 +721,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="jarkViewer.rc">
+    <ResourceCompile Include="JarkViewer.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -729,7 +729,7 @@
     <Image Include="small.ico">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="jarkViewer.ico">
+    <Image Include="JarkViewer.ico">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="file\tips.png">

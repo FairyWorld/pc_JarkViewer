@@ -23,7 +23,7 @@
 std::wstring_view appName = L"JarkViewer";
 std::wstring_view appVersion = L"v1.29Alpha";
 std::wstring_view jarkLink = L"https://github.com/jark006";
-std::wstring_view GithubLink = L"https://github.com/jark006/jarkViewer";
+std::wstring_view GithubLink = L"https://github.com/jark006/JarkViewer";
 std::wstring_view BaiduLink = L"https://pan.baidu.com/s/1ka7p__WVw2du3mnOfqWceQ?pwd=6666"; // 密码 6666
 std::wstring_view LanzouLink = L"https://jark006.lanzout.com/b0ko7mczg"; // 密码 6666
 
@@ -68,6 +68,8 @@ struct CurImageParameter {
 
     vector<int64_t> zoomList;
     int zoomIndex = 0;
+    int zoomIndexFix = 0;
+    int zoomIndex100percent = 0;
     bool isAnimationPause = false;
     int width = 0;
     int height = 0;
@@ -112,6 +114,11 @@ struct CurImageParameter {
             std::sort(zoomList.begin(), zoomList.end());
             auto it = std::find(zoomList.begin(), zoomList.end(), zoomTarget);
             zoomIndex = (it != zoomList.end()) ? (int)std::distance(zoomList.begin(), it) : (int)(ZOOM_LIST.size() / 2);
+
+            it = std::find(zoomList.begin(), zoomList.end(), zoomFitWindow);
+            zoomIndexFix = (it != zoomList.end()) ? (int)std::distance(zoomList.begin(), it) : zoomIndex;
+            it = std::find(zoomList.begin(), zoomList.end(), ZOOM_BASE);
+            zoomIndex100percent = (it != zoomList.end()) ? (int)std::distance(zoomList.begin(), it) : zoomIndex;
         }
         else {
             curFrameIdxMax = 0;
@@ -120,6 +127,8 @@ struct CurImageParameter {
 
             zoomList = std::vector<int64_t>(ZOOM_LIST.begin(), ZOOM_LIST.end());
             zoomIndex = (int)(ZOOM_LIST.size() / 2);
+            zoomIndexFix = zoomIndex;
+            zoomIndex100percent = zoomIndex;
             zoomTarget = ZOOM_BASE;
             zoomCur = ZOOM_BASE;
         }
@@ -144,6 +153,11 @@ struct CurImageParameter {
                 zoomIndex = (int)zoomList.size() - 1;
         }
         std::sort(zoomList.begin(), zoomList.end());
+
+        auto it = std::find(zoomList.begin(), zoomList.end(), zoomFitWindow);
+        zoomIndexFix = (it != zoomList.end()) ? (int)std::distance(zoomList.begin(), it) : zoomIndex;
+        it = std::find(zoomList.begin(), zoomList.end(), ZOOM_BASE);
+        zoomIndex100percent = (it != zoomList.end()) ? (int)std::distance(zoomList.begin(), it) : zoomIndex;
     }
 
     void slideTargetRotateLeft() {
@@ -772,6 +786,10 @@ public:
 
             case VK_DOWN: {
                 operateQueue.push({ ActionENUM::zoomOut });
+            }break;
+
+            case VK_NUMPAD5: {
+                operateQueue.push({ ActionENUM::zoomFix });
             }break;
 
             case VK_PRIOR:
@@ -1844,6 +1862,21 @@ public:
                 curPar.zoomTarget = zoomNext;
                 smoothShift = true;
             }
+        } break;
+
+        case ActionENUM::zoomFix: {
+            if (curPar.zoomIndex == curPar.zoomIndex100percent)
+                curPar.zoomIndex = curPar.zoomIndexFix;
+            else
+				curPar.zoomIndex = curPar.zoomIndex100percent;
+
+            auto zoomNext = curPar.zoomList[curPar.zoomIndex];
+            if (curPar.zoomTarget && zoomNext != curPar.zoomTarget) {
+                curPar.slideTarget.x = (int)(zoomNext * curPar.slideTarget.x / curPar.zoomTarget);
+                curPar.slideTarget.y = (int)(zoomNext * curPar.slideTarget.y / curPar.zoomTarget);
+            }
+            curPar.zoomTarget = zoomNext;
+            smoothShift = true;
         } break;
 
         case ActionENUM::rotateLeft: {

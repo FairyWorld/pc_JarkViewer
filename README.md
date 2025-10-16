@@ -1,6 +1,6 @@
-# 🌟 jarkViewer看图
+# 🌟 JarkViewer看图
 
-![Version](https://img.shields.io/github/v/release/jark006/jarkViewer) ![Download](https://img.shields.io/github/downloads/jark006/jarkviewer/total) ![Stars](https://img.shields.io/github/stars/jark006/jarkViewer) ![License](https://img.shields.io/github/license/jark006/jarkViewer) ![Platform](https://img.shields.io/badge/OS-Windows%2010/11%2064%20bit-00adef.svg)
+![Version](https://img.shields.io/github/v/release/jark006/JarkViewer) ![Download](https://img.shields.io/github/downloads/jark006/jarkviewer/total) ![Stars](https://img.shields.io/github/stars/jark006/JarkViewer) ![License](https://img.shields.io/github/license/jark006/JarkViewer) ![Platform](https://img.shields.io/badge/OS-Windows%2010/11%2064%20bit-00adef.svg)
 
 *一个高效便捷的多格式图片查看工具*
 
@@ -58,12 +58,12 @@
 
 下载仓库源码时，只需下载最新提交，历史提交存在较多占空间的冗余文件。
 ```sh
-git clone git@github.com:jark006/jarkViewer.git --depth=1
+git clone git@github.com:jark006/JarkViewer.git --depth=1
 ```
 
 本软件采用全库静态链接，开发者需要在编译前备好所有第三方静态库文件，请在以下链接下载对应版本的第三方静态库文件压缩包，按说明解压到对应位置。
 
-静态库下载： [https://github.com/jark006/jarkViewer/releases/tag/static_lib](https://github.com/jark006/jarkViewer/releases/tag/static_lib)
+静态库下载： [https://github.com/jark006/JarkViewer/releases/tag/static_lib](https://github.com/jark006/JarkViewer/releases/tag/static_lib)
 
 以上静态库除 `OpenCV` 外，均使用vcpkg安装的静态库复制而来。OpenCV静态库的编译指令集基准为AVX2，即只支持`Intel 4代` / `AMD Ryzen系列` 及后续CPU，除了移除dnn/js/java/python绑定等等不需要的组件，还有以下几个主要修改：
 1. 在源码 `opencv-4.12.0\modules\imgcodecs\src\loadsave.cpp` #68-79 移除图像分辨率限制。
@@ -89,4 +89,4 @@ vcpkg install opencv4[core,contrib,freetype,ipp,jasper,jpeg,jpegxl,nonfree,opene
 
 ## 📜 License
 
-本项目采用 MIT 许可证开放源代码。了解更多内容，请查看 [LICENSE 文件](https://github.com/jark006/jarkViewer/blob/main/LICENSE)。
+本项目采用 MIT 许可证开放源代码。了解更多内容，请查看 [LICENSE 文件](https://github.com/jark006/JarkViewer/blob/main/LICENSE)。

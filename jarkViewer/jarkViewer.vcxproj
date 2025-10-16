@@ -14,7 +14,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{b0d84475-f869-46b6-bb98-40e788cb86d9}</ProjectGuid>
-    <RootNamespace>jarkViewer</RootNamespace>
+    <RootNamespace>JarkViewer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -382,14 +382,14 @@
     <ClCompile Include="src\D2D1App.cpp" />
     <ClCompile Include="src\exifParse.cpp" />
     <ClCompile Include="src\ImageDatabase.cpp" />
-    <ClCompile Include="src\jarkViewer.cpp" />
+    <ClCompile Include="src\JarkViewer.cpp" />
     <ClCompile Include="src\libbpg.cpp" />
     <ClCompile Include="src\jarkUtils.cpp" />
     <ClCompile Include="src\TextDrawer.cpp" />
     <ClCompile Include="src\tinyxml2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="jarkViewer.rc" />
+    <ResourceCompile Include="JarkViewer.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="file\home.png" />
@@ -397,7 +397,7 @@
     <Image Include="file\printerRes.png" />
     <Image Include="file\settingRes.png" />
     <Image Include="file\tips.png" />
-    <Image Include="jarkViewer.ico" />
+    <Image Include="JarkViewer.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>

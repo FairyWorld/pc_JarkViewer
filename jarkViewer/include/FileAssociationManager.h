@@ -144,8 +144,8 @@ private:
 public:
     FileAssociationManager() {
         m_appPath = GetCurrentAppPath();
-        m_appName = L"jarkViewer";
-        m_progId = L"jarkViewer.ImageFile";
+        m_appName = L"JarkViewer";
+        m_progId = L"JarkViewer.ImageFile";
     }
 
     // 管理文件关联的主函数

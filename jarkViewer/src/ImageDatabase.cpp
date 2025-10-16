@@ -2052,6 +2052,12 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, imageAsset.primaryFrame.cols, imageAsset.primaryFrame.rows,
                 fileBuf.data(), fileBuf.size())
                 + ExifParse::getExif(path, fileBuf.data(), fileBuf.size());
+
+            // TODO 上面几种格式待测试 有些在解码时已应用旋转
+            const size_t idx = imageAsset.exifInfo.find("\n方向: ");
+            if (idx != string::npos) {
+                handleExifOrientation(imageAsset.exifInfo[idx + 9] - '0', imageAsset.primaryFrame);
+            }
         }
         else {
             imageAsset.exifInfo = ExifParse::getSimpleInfo(path, imageAsset.frames[0].cols, imageAsset.frames[0].rows, fileBuf.data(), fileBuf.size())

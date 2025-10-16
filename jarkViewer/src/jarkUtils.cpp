@@ -284,7 +284,7 @@ void jarkUtils::copyImageToClipboard(const cv::Mat& image) {
         return;
     }
 
-    size_t dibStride = width * 4ULL;
+    int dibStride = width * 4;
     int imageDataSize = dibStride * height;
 
     // 创建CF_DIBV5格式数据
