@@ -2148,7 +2148,7 @@ ImageAsset ImageDatabase::myLoader(const wstring& path) {
 
 ImageAsset ImageDatabase::loader(const wstring& path) {
     auto imageAsset = myLoader(path);
-    JARK_LOG(parseImageAssetInfo(path, imageAsset));
+    JARK_LOG("{}", parseImageAssetInfo(path, imageAsset));
     convertImageAssetToCV_8U(imageAsset);
     return imageAsset;
 }
