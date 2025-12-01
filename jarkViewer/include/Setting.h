@@ -4,6 +4,7 @@
 #include "TextDrawer.h"
 #include "D2D1App.h"
 #include "FileAssociationManager.h"
+#include "stringRes.h"
 
 extern std::wstring_view appVersion;
 extern std::wstring_view jarkLink;
@@ -17,13 +18,13 @@ struct labelBox {
 };
 struct generalTabCheckBox {
     cv::Rect rect{};
-    string_view text;
+    int stringID = 0;
     bool* valuePtr = nullptr;
 };
 
 struct generalTabRadio {
     cv::Rect rect{};
-    std::vector<string_view> text;
+    std::vector<int> stringIDs;
     int* valuePtr = nullptr;
 };
 
@@ -32,6 +33,7 @@ private:
     static const int winWidth = 1000;
     static const int winHeight = 800;
     static const int tabHeight = 50;
+    static const int TabWidth = 150;
 
     static inline string windowsNameAnsi;
     static inline volatile bool requestExitFlag = false;
@@ -43,11 +45,11 @@ private:
     static inline std::vector<labelBox> labelList;
 
     TextDrawer textDrawer;
-    cv::Mat winCanvas, settingRes, tabTitleMat, helpPage, aboutPage;
+    cv::Mat winCanvas, settingRes, helpPage, aboutPage;
 
     void Init(int tabIdx = 0) {
         textDrawer.setSize(24);
-        windowsNameAnsi = jarkUtils::utf8ToAnsi("设置");
+        windowsNameAnsi = jarkUtils::utf8ToAnsi(getUIString(1));
         winCanvas = cv::Mat(winHeight, winWidth, CV_8UC4, cv::Scalar(240, 240, 240, 240));
         curTabIdx = tabIdx;
 
@@ -55,23 +57,23 @@ private:
         rc = jarkUtils::GetResource(IDB_PNG_SETTING_RES, L"PNG");
         settingRes = cv::imdecode(cv::Mat(1, (int)rc.size, CV_8UC1, (uint8_t*)rc.ptr), cv::IMREAD_UNCHANGED);
 
-        tabTitleMat = settingRes({ 0, 0, 400, 50 });
         helpPage = settingRes({ 0, 100, 1000, 750 });
         aboutPage = settingRes({ 0, 850, 1000, 750 });
 
         // GeneralTab
         if (generalTabCheckBoxList.empty()) {
             generalTabCheckBoxList = {
-                { {50, 100, 180, 50}, "旋转动画", &GlobalVar::settingParameter.isAllowRotateAnimation },
-                { {50, 150, 180, 50}, "缩放动画", &GlobalVar::settingParameter.isAllowZoomAnimation },
-                { {50, 200, 760, 50}, "平移图像加速 (拖动图像时优化渲染速度，图像会微微失真)", &GlobalVar::settingParameter.isOptimizeSlide },
-                { {50, 250, 200, 50}, "删除时提示", &GlobalVar::settingParameter.isNoteBeforeDelete },
+                { {50, 100, 760, 50}, 12, &GlobalVar::settingParameter.isAllowRotateAnimation },
+                { {50, 150, 760, 50}, 13, &GlobalVar::settingParameter.isAllowZoomAnimation },
+                { {50, 200, 760, 50}, 14, &GlobalVar::settingParameter.isOptimizeSlide },
+                { {50, 250, 760, 50}, 15, &GlobalVar::settingParameter.isNoteBeforeDelete },
             };
         }
         if (generalTabRadioList.empty()) {
             generalTabRadioList = {
-                {{50, 350, 600, 50}, {"切图动画", "无动画", "上下滑动", "左右滑动"}, &GlobalVar::settingParameter.switchImageAnimationMode },
-                {{50, 410, 600, 50}, {"界面主题", "跟随系统", "浅色", "深色"}, &GlobalVar::settingParameter.UI_Mode },
+                {{50, 350, 600, 50}, {20, 21, 22, 23}, &GlobalVar::settingParameter.switchImageAnimationMode },
+                {{50, 400, 600, 50}, {24, 25, 26, 27}, &GlobalVar::settingParameter.UI_Mode },
+                {{50, 450, 600, 50}, {28, 29, 30, 31}, &GlobalVar::settingParameter.UI_LANG },
             };
         }
 
@@ -136,25 +138,25 @@ public:
                 cv::rectangle(winCanvas, rect, cv::Scalar(255, 200, 120, 255), -1);
             }
 
-            rect = { cbox.rect.x + cbox.rect.height, cbox.rect.y, cbox.rect.width - cbox.rect.height, cbox.rect.height };
-            textDrawer.putAlignCenter(winCanvas, rect, cbox.text.data(), cv::Scalar(0, 0, 0, 255));
+            rect = { cbox.rect.x + cbox.rect.height, cbox.rect.y+8, cbox.rect.width - cbox.rect.height, cbox.rect.height };
+            textDrawer.putAlignLeft(winCanvas, rect, getUIString(cbox.stringID), cv::Scalar(0, 0, 0, 255));
         }
 
         for (auto& radio : generalTabRadioList) {
             int idx = *radio.valuePtr;
-            if (idx >= radio.text.size())
+            if (idx >= radio.stringIDs.size())
                 idx = 0;
 
-            int itemWidth = radio.rect.width / radio.text.size();
-            cv::Rect rect1 = { radio.rect.x + itemWidth * (1 + idx) , radio.rect.y, itemWidth, radio.rect.height }; // 当前项背景框
+            int itemWidth = radio.rect.width / radio.stringIDs.size();
+            cv::Rect rect1 = { radio.rect.x + itemWidth * (1 + idx) , radio.rect.y + 4, itemWidth, radio.rect.height - 4 }; // 当前项背景框
             cv::rectangle(winCanvas, rect1, cv::Scalar(255, 230, 150, 255), -1);
 
-            cv::Rect rect2 = { radio.rect.x + itemWidth , radio.rect.y, radio.rect.width - itemWidth, radio.rect.height }; //大框
+            cv::Rect rect2 = { radio.rect.x + itemWidth , radio.rect.y + 4, radio.rect.width - itemWidth, radio.rect.height - 4 }; //大框
             cv::rectangle(winCanvas, rect2, cv::Scalar(0, 0, 0, 255), 2);
 
-            for (int i = 0; i < radio.text.size(); i++) {
+            for (int i = 0; i < radio.stringIDs.size(); i++) {
                 cv::Rect rect3 = { radio.rect.x + itemWidth * (i), radio.rect.y , itemWidth, radio.rect.height };
-                textDrawer.putAlignCenter(winCanvas, rect3, radio.text[i].data(), cv::Scalar(0, 0, 0, 255));
+                textDrawer.putAlignCenter(winCanvas, rect3, getUIString(radio.stringIDs[i]), cv::Scalar(0, 0, 0, 255));
             }
         }
 
@@ -222,8 +224,11 @@ public:
     void refreshUI() {
         // 绘制标签栏
         cv::rectangle(winCanvas, { 0, 0, winWidth, tabHeight }, cv::Scalar(200, 200, 200, 255), -1);
-        cv::rectangle(winCanvas, { curTabIdx * 100, 0, 100, tabHeight }, cv::Scalar(240, 240, 240, 255), -1);
-        jarkUtils::overlayImg(winCanvas, tabTitleMat, 0, 0);
+        cv::rectangle(winCanvas, { curTabIdx * TabWidth, 0, TabWidth, tabHeight }, cv::Scalar(240, 240, 240, 255), -1);
+        textDrawer.putAlignCenter(winCanvas, { 0, 0,150, 50 }, getUIString(2), { 0, 0, 0, 255 });
+        textDrawer.putAlignCenter(winCanvas, { 150, 0,150, 50 }, getUIString(3), { 0, 0, 0, 255 });
+        textDrawer.putAlignCenter(winCanvas, { 300, 0,150, 50 }, getUIString(4), { 0, 0, 0, 255 });
+        textDrawer.putAlignCenter(winCanvas, { 450, 0,150, 50 }, getUIString(5), { 0, 0, 0, 255 });
 
         switch (curTabIdx) {
         case 0:refreshGeneralTab(); break;
@@ -246,13 +251,13 @@ public:
 
             for (auto& radio : generalTabRadioList) {
                 if (isInside(x, y, radio.rect)) {
-                    int itemWidth = radio.rect.width / radio.text.size();
+                    int itemWidth = radio.rect.width / radio.stringIDs.size();
                     int clickIdx = (x - radio.rect.x) / itemWidth - 1;
-                    if (0 <= clickIdx && clickIdx < radio.text.size() - 1) {
+                    if (0 <= clickIdx && clickIdx < radio.stringIDs.size() - 1) {
                         *radio.valuePtr = clickIdx;
                         isNeedRefreshUI = true;
 
-                        if (radio.text.front() == "界面主题") {
+                        if (radio.stringIDs.front() == 24) {
                             GlobalVar::isNeedUpdateTheme = true;
                         }
                     }
@@ -406,7 +411,7 @@ public:
 
     static void mouseCallback(int event, int x, int y, int flags, void* userData) {
         if (event == cv::EVENT_LBUTTONUP && y < 50) {
-            int newTabIdx = x / 100;
+            int newTabIdx = x / TabWidth;
             if (newTabIdx <= 3 && newTabIdx != curTabIdx) {
                 isNeedRefreshUI = true;
                 switch (curTabIdx) {

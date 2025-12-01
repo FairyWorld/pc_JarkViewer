@@ -656,3 +656,8 @@ void jarkUtils::activateWindow(HWND hwnd) {
         SetForegroundWindow(hwnd);
     }
 }
+
+bool jarkUtils::isSystemUILanguageChinese(){
+    LANGID langId = GetUserDefaultUILanguage();
+    return PRIMARYLANGID(langId) == LANG_CHINESE;
+}

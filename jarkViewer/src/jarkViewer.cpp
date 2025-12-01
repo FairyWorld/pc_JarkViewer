@@ -21,7 +21,7 @@
 */
 
 std::wstring_view appName = L"JarkViewer";
-std::wstring_view appVersion = L"v1.29";
+std::wstring_view appVersion = L"v1.30";
 std::wstring_view jarkLink = L"https://github.com/jark006";
 std::wstring_view GithubLink = L"https://github.com/jark006/JarkViewer";
 std::wstring_view BaiduLink = L"https://pan.baidu.com/s/1ka7p__WVw2du3mnOfqWceQ?pwd=6666"; // 密码 6666
@@ -645,8 +645,8 @@ public:
 
                 if (IDYES == MessageBoxW(
                     m_hWnd,
-                    L"是否要将此动图或实况图视频的每一帧批量保存到png图片文件？",
-                    L"保存每一帧到原图文件夹",
+                    std::format(L"是否要将此动图或实况图视频的每一帧(共{}帧)批量保存到png图片文件？", frames.size()).c_str(),
+                    std::format(L"保存每一帧(共{}帧)到原图文件夹", frames.size()).c_str(),
                     MB_YESNO | MB_ICONQUESTION
                 )) {
                     std::thread saveThread([](std::wstring filePath, std::shared_ptr<ImageAsset> imageAssetPtr) {
@@ -1902,10 +1902,10 @@ public:
         } break;
 
         case ActionENUM::deleteImg: {
-            if (imgFileList.empty() || curFileIdx < 0 || curFileIdx >= (int)imgFileList.size()){break;}
+            if (imgFileList.empty() || curFileIdx < 0 || curFileIdx >= (int)imgFileList.size()) { break; }
 
             const std::wstring& target = imgFileList[curFileIdx];
-            if (target == m_wndCaption){
+            if (target == m_wndCaption) {
                 break;
             }
 
@@ -1923,7 +1923,7 @@ public:
                     imgFileList[curFileIdx],
                     imgFileList[(curFileIdx + 1) % imgFileList.size()]);
                 curPar.Init(winWidth, winHeight);
-            };
+                };
 
             namespace fs = std::filesystem;
             const fs::path targetPath(target);
@@ -2098,6 +2098,7 @@ int WINAPI wWinMain(
 
     test();
 
+    GlobalVar::isSystemUIChinese = jarkUtils::isSystemUILanguageChinese();
     Exiv2::enableBMFF();
     ::ImmDisableIME(GetCurrentThreadId()); // 禁用输入法，防止干扰按键操作
 

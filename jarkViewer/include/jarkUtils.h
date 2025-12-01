@@ -108,13 +108,13 @@ struct SettingParameter {
     bool isAllowZoomAnimation = true;
     bool isOptimizeSlide = true;            // 优化图像平移性能 （实为渲染工作量偷懒减半）
     bool isNoteBeforeDelete = true;         // 删除前提示
-    bool reserve4 = false;
     int switchImageAnimationMode = 0;       // 0: 无动画  1:上下滑动  2:左右滑动
 
     int pptOrder = 0;                       // 幻灯片模式  0: 顺序  1:逆序  2:随机
     int pptTimeout = 5;                     // 幻灯片模式  切换间隔 1 ~ 300 秒
 
     int UI_Mode = 0;                        // 界面主题 0:跟随系统  1:浅色  2:深色
+    int UI_LANG = 0;                        // 界面语言 0:跟随系统  1:中文  2:English
 
     uint32_t reserve[801];
 
@@ -327,6 +327,7 @@ struct MatPack {
 
 struct GlobalVar {
     static inline bool isNeedUpdateTheme = false;
+    static inline bool isSystemUIChinese = true;
 
     static inline BOOL isSystemDarkMode = 0;
     static inline ThemeColor theme = deepTheme;
@@ -429,6 +430,8 @@ public:
     static void wstringReplace(std::wstring& src, std::wstring_view oldBlock, std::wstring_view newBlock);
 
     static void activateWindow(HWND hwnd);
+
+    static bool isSystemUILanguageChinese();
 
     static inline const char COMPILE_DATE_TIME[32] = {
         __DATE__[7],

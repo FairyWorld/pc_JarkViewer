@@ -3,10 +3,23 @@
 
 
 std::string ExifParse::getSimpleInfo(wstring_view path, int width, int height, const uint8_t* buf, size_t fileSize) {
-    return (path.ends_with(L".ico") || (width == 0 && height == 0)) ?
+    int langIdx = GlobalVar::settingParameter.UI_LANG == 0 ?
+        (jarkUtils::isSystemUILanguageChinese() ? 0 : 1) :
+        (GlobalVar::settingParameter.UI_LANG - 1);
+    if (langIdx < 0 || langIdx > 1) // 目前仅中英，索引范围0~1
+        langIdx = 0;
+
+    if (langIdx == 0)
+        return (path.ends_with(L".ico") || (width == 0 && height == 0)) ?
         std::format("路径: {}\n大小: {}\n",
             jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize)) :
         std::format("路径: {}\n大小: {}\n分辨率: {}x{}",
+            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize), width, height);
+    else
+        return(path.ends_with(L".ico") || (width == 0 && height == 0)) ?
+        std::format("Path: {}\nSize: {}\n",
+            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize)) :
+        std::format("Path: {}\nSize: {}\nResolution: {}x{}",
             jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize), width, height);
 }
 
