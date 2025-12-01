@@ -65,12 +65,13 @@ private:
                 { {50, 100, 180, 50}, "旋转动画", &GlobalVar::settingParameter.isAllowRotateAnimation },
                 { {50, 150, 180, 50}, "缩放动画", &GlobalVar::settingParameter.isAllowZoomAnimation },
                 { {50, 200, 760, 50}, "平移图像加速 (拖动图像时优化渲染速度，图像会微微失真)", &GlobalVar::settingParameter.isOptimizeSlide },
+                { {50, 250, 200, 50}, "删除时提示", &GlobalVar::settingParameter.isNoteBeforeDelete },
             };
         }
         if (generalTabRadioList.empty()) {
             generalTabRadioList = {
-                {{50, 300, 600, 50}, {"切图动画", "无动画", "上下滑动", "左右滑动"}, &GlobalVar::settingParameter.switchImageAnimationMode },
-                {{50, 360, 600, 50}, {"界面主题", "跟随系统", "浅色", "深色"}, &GlobalVar::settingParameter.UI_Mode },
+                {{50, 350, 600, 50}, {"切图动画", "无动画", "上下滑动", "左右滑动"}, &GlobalVar::settingParameter.switchImageAnimationMode },
+                {{50, 410, 600, 50}, {"界面主题", "跟随系统", "浅色", "深色"}, &GlobalVar::settingParameter.UI_Mode },
             };
         }
 
