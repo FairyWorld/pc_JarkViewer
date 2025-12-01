@@ -842,6 +842,10 @@ public:
                 operateQueue.push({ ActionENUM::requestExit });
             }break;
 
+            case VK_DELETE: { //DELETE
+                operateQueue.push({ ActionENUM::deleteImg });
+            }
+
 #ifndef NDEBUG
             default: {
                 JARK_LOG("{} KeyValue: 0x{:04x}", __FUNCTION__, (uint64_t)keyValue);
@@ -1868,7 +1872,7 @@ public:
             if (curPar.zoomIndex == curPar.zoomIndex100percent)
                 curPar.zoomIndex = curPar.zoomIndexFix;
             else
-				curPar.zoomIndex = curPar.zoomIndex100percent;
+                curPar.zoomIndex = curPar.zoomIndex100percent;
 
             auto zoomNext = curPar.zoomList[curPar.zoomIndex];
             if (curPar.zoomTarget && zoomNext != curPar.zoomTarget) {
@@ -1895,6 +1899,73 @@ public:
             curPar.rotation = (curPar.rotation + 4 - 1) & 0b11;
             curPar.slideTargetRotateRight();
             curPar.updateZoomList(winWidth, winHeight);
+        } break;
+
+        case ActionENUM::deleteImg: {
+            if (imgFileList.empty() || curFileIdx < 0 || curFileIdx >= (int)imgFileList.size()){break;}
+
+            const std::wstring& target = imgFileList[curFileIdx];
+            if (target == m_wndCaption){
+                break;
+            }
+
+            auto refreshAfterRemoval = [&]() {
+                if (imgFileList.empty()) {
+                    imgFileList.emplace_back(m_wndCaption);
+                    curFileIdx = 0;
+                    imgDB.put(m_wndCaption, { ImageFormat::Still, imgDB.getHomeMat(), {}, {}, "使用Ctrl+O或拖入图像文件打开" });
+                }
+                else if (curFileIdx >= (int)imgFileList.size()) {
+                    curFileIdx = (int)imgFileList.size() - 1;
+                }
+
+                curPar.imageAssetPtr = imgDB.getSafePtr(
+                    imgFileList[curFileIdx],
+                    imgFileList[(curFileIdx + 1) % imgFileList.size()]);
+                curPar.Init(winWidth, winHeight);
+            };
+
+            namespace fs = std::filesystem;
+            const fs::path targetPath(target);
+            std::error_code existsErr;
+            const bool exists = fs::exists(targetPath, existsErr);
+            std::error_code typeErr;
+            const bool isRegular = fs::is_regular_file(targetPath, typeErr);
+            if (!exists || existsErr || !isRegular || typeErr) {
+                imgFileList.erase(imgFileList.begin() + curFileIdx);
+                refreshAfterRemoval();
+                break;
+            }
+
+            bool shouldDelete = true;
+            if (GlobalVar::settingParameter.isNoteBeforeDelete) {
+                auto tips = std::format(L"确定要将以下文件移至回收站吗？\n\n{}", targetPath.wstring());
+                shouldDelete = MessageBoxW(m_hWnd, tips.c_str(), L"JarkViewer看图",
+                    MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) == IDYES;
+            }
+
+            if (!shouldDelete)
+                break;
+
+            std::wstring pathBuffer = targetPath.wstring();
+            pathBuffer.push_back(L'\0'); // SHFileOperation 需要双零终止
+
+            SHFILEOPSTRUCTW fileOp{};
+            fileOp.hwnd = m_hWnd;
+            fileOp.wFunc = FO_DELETE;
+            fileOp.pFrom = pathBuffer.c_str();
+            fileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT;
+
+            int opResult = SHFileOperationW(&fileOp);
+            if (opResult != 0 || fileOp.fAnyOperationsAborted) {
+                DWORD lastError = opResult != 0 ? (DWORD)opResult : GetLastError();
+                auto errMsg = std::format(L"删除失败，错误码 0x{:08X}", lastError);
+                MessageBoxW(m_hWnd, errMsg.c_str(), L"JarkViewer看图", MB_OK | MB_ICONERROR);
+                break;
+            }
+
+            imgFileList.erase(imgFileList.begin() + curFileIdx);
+            refreshAfterRemoval();
         } break;
 
         case ActionENUM::requestExit: {

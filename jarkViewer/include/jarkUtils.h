@@ -107,6 +107,7 @@ struct SettingParameter {
     bool isAllowRotateAnimation = true;
     bool isAllowZoomAnimation = true;
     bool isOptimizeSlide = true;            // 优化图像平移性能 （实为渲染工作量偷懒减半）
+    bool isNoteBeforeDelete = true;         // 删除前提示
     bool reserve4 = false;
     int switchImageAnimationMode = 0;       // 0: 无动画  1:上下滑动  2:左右滑动
 
@@ -115,7 +116,7 @@ struct SettingParameter {
 
     int UI_Mode = 0;                        // 界面主题 0:跟随系统  1:浅色  2:深色
 
-    uint32_t reserve[802];
+    uint32_t reserve[801];
 
     char extCheckedListStr[800];
 
@@ -235,7 +236,7 @@ struct ImageAsset {
 
 enum class ActionENUM:int64_t {
     none = 0, newSize, slide, preImg, nextImg, firstImg, finalImg, zoomIn, zoomOut, zoomFix, toggleExif, toggleFullScreen, requestExit, normalFresh,
-    rotateLeft, rotateRight, printImage, setting,
+    rotateLeft, rotateRight, printImage, deleteImg, setting
 };
 
 enum class CursorPos :int {
