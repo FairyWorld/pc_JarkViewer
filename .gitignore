@@ -1,4 +1,6 @@
 .vs
+.vscode
+build
 x64
 /jarkViewer/jarkViewer.aps
 /jarkViewer/file/home.psd
