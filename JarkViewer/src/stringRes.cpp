@@ -4,8 +4,8 @@
 
 
 // 界面字符串表，暂时仅支持中文和英文
-// 不要随意增减条目，索引号对应 stringID 使用
 // 条目所在行号减10即为 stringID
+// 因为使用索引是硬编码，所以不要随意在中间增减条目，会打乱索引，只能在后面追加条目
 const char* const UIStringTable[][2] = {
     {"NULL", "NULL"},
     {"设置", "Settings"},
@@ -31,21 +31,17 @@ const char* const UIStringTable[][2] = {
     {"无动画", "None"},
     {"上下滑动", "Vertical"},
     {"左右滑动", "Horizontal"},
-    {"界面主题", "Theme"},
+    {"主题", "Theme"},
     {"跟随系统", "System"},
     {"浅色", "Light"},
     {"深色", "Dark"},
-    {"语言Lang", "语言Lang"},
-    {"自动Auto", "自动Auto"},
+    {"语言", "Language"},
+    {"XX", "XX"},
     {"中文", "中文"},
     {"English", "English"},
 };
 
-const char* const getUIString(int stringidx) {
-    int langIdx = GlobalVar::settingParameter.UI_LANG == 0 ?
-        (jarkUtils::isSystemUILanguageChinese() ? 0 : 1) :
-        (GlobalVar::settingParameter.UI_LANG - 1);
-    if (langIdx < 0 || langIdx > 1) // 目前仅中英，索引范围0~1
-        langIdx = 0;
-    return UIStringTable[stringidx][langIdx];
+// 获取字符串
+const char* const getUIString(const int stringidx) {
+    return UIStringTable[stringidx][GlobalVar::settingParameter.UI_LANG];
 }

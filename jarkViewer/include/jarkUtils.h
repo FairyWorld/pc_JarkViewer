@@ -114,7 +114,7 @@ struct SettingParameter {
     int pptTimeout = 5;                     // 幻灯片模式  切换间隔 1 ~ 300 秒
 
     int UI_Mode = 0;                        // 界面主题 0:跟随系统  1:浅色  2:深色
-    int UI_LANG = 0;                        // 界面语言 0:跟随系统  1:中文  2:English
+    int UI_LANG = 0;                        // 界面语言 0:中文  1:English
 
     uint32_t reserve[801];
 
@@ -122,6 +122,15 @@ struct SettingParameter {
 
     SettingParameter() {
         memcpy(extCheckedListStr, defaultExtList.data(), defaultExtList.length() + 1);
+        UI_LANG = (PRIMARYLANGID(GetUserDefaultUILanguage()) == LANG_CHINESE) ? 0 : 1;
+    }
+
+    SettingParameter(const SettingParameter& other) {
+        memcpy(this, &other, sizeof(SettingParameter));
+
+        // 检查参数
+        if (UI_LANG < 0 || UI_LANG > 1) // 目前仅中英，索引范围0~1
+            UI_LANG = 0;
     }
 };
 
@@ -327,7 +336,6 @@ struct MatPack {
 
 struct GlobalVar {
     static inline bool isNeedUpdateTheme = false;
-    static inline bool isSystemUIChinese = true;
 
     static inline BOOL isSystemDarkMode = 0;
     static inline ThemeColor theme = deepTheme;
@@ -430,8 +438,6 @@ public:
     static void wstringReplace(std::wstring& src, std::wstring_view oldBlock, std::wstring_view newBlock);
 
     static void activateWindow(HWND hwnd);
-
-    static bool isSystemUILanguageChinese();
 
     static inline const char COMPILE_DATE_TIME[32] = {
         __DATE__[7],

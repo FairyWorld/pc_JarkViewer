@@ -73,7 +73,7 @@ private:
             generalTabRadioList = {
                 {{50, 350, 600, 50}, {20, 21, 22, 23}, &GlobalVar::settingParameter.switchImageAnimationMode },
                 {{50, 400, 600, 50}, {24, 25, 26, 27}, &GlobalVar::settingParameter.UI_Mode },
-                {{50, 450, 600, 50}, {28, 29, 30, 31}, &GlobalVar::settingParameter.UI_LANG },
+                {{50, 450, 450, 50}, {28, 30, 31}, &GlobalVar::settingParameter.UI_LANG },
             };
         }
 
@@ -148,10 +148,10 @@ public:
                 idx = 0;
 
             int itemWidth = radio.rect.width / radio.stringIDs.size();
-            cv::Rect rect1 = { radio.rect.x + itemWidth * (1 + idx) , radio.rect.y + 4, itemWidth, radio.rect.height - 4 }; // 当前项背景框
+            cv::Rect rect1 = { radio.rect.x + itemWidth * (1 + idx) , radio.rect.y + 4, itemWidth, radio.rect.height - 6 }; // 当前项背景框
             cv::rectangle(winCanvas, rect1, cv::Scalar(255, 230, 150, 255), -1);
 
-            cv::Rect rect2 = { radio.rect.x + itemWidth , radio.rect.y + 4, radio.rect.width - itemWidth, radio.rect.height - 4 }; //大框
+            cv::Rect rect2 = { radio.rect.x + itemWidth , radio.rect.y + 4, radio.rect.width - itemWidth, radio.rect.height - 6 }; //大框
             cv::rectangle(winCanvas, rect2, cv::Scalar(0, 0, 0, 255), 2);
 
             for (int i = 0; i < radio.stringIDs.size(); i++) {

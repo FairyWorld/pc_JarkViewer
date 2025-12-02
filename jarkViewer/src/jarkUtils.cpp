@@ -185,18 +185,11 @@ bool jarkUtils::copyToClipboard(wstring_view text) {
 bool jarkUtils::limitSizeTo16K(cv::Mat& image) {
     // 检查并缩放图像（保持宽高比）
     if (image.cols > 16384 || image.rows > 16384) {
-        try {
-            double scale = std::min(16384.0 / image.cols, 16384.0 / image.rows);
-            int newWidth = static_cast<int>(image.cols * scale);
-            int newHeight = static_cast<int>(image.rows * scale);
-            cv::resize(image, image, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_LINEAR);
-            MessageBoxW(nullptr, std::format(L"图像分辨率太大，将缩放到 {}x{}", image.cols, image.rows).c_str(), L"提示", MB_OK | MB_ICONWARNING);
-            return true;
-        }
-        catch (const cv::Exception& e) {
-            MessageBoxW(nullptr, L"图像缩放失败", L"错误", MB_OK | MB_ICONERROR);
-            return false;
-        }
+        double scale = std::min(16384.0 / image.cols, 16384.0 / image.rows);
+        int newWidth = static_cast<int>(image.cols * scale);
+        int newHeight = static_cast<int>(image.rows * scale);
+        cv::resize(image, image, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_LINEAR);
+        MessageBoxW(nullptr, std::format(L"图像分辨率太大，将缩放到 {}x{}", image.cols, image.rows).c_str(), L"提示", MB_OK | MB_ICONWARNING);
     }
     return true;
 }
@@ -655,9 +648,4 @@ void jarkUtils::activateWindow(HWND hwnd) {
         }
         SetForegroundWindow(hwnd);
     }
-}
-
-bool jarkUtils::isSystemUILanguageChinese(){
-    LANGID langId = GetUserDefaultUILanguage();
-    return PRIMARYLANGID(langId) == LANG_CHINESE;
 }

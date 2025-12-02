@@ -2098,7 +2098,6 @@ int WINAPI wWinMain(
 
     test();
 
-    GlobalVar::isSystemUIChinese = jarkUtils::isSystemUILanguageChinese();
     Exiv2::enableBMFF();
     ::ImmDisableIME(GetCurrentThreadId()); // 禁用输入法，防止干扰按键操作
 
