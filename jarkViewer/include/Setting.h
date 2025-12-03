@@ -4,7 +4,6 @@
 #include "TextDrawer.h"
 #include "D2D1App.h"
 #include "FileAssociationManager.h"
-#include "stringRes.h"
 
 extern std::wstring_view appVersion;
 extern std::wstring_view jarkLink;
@@ -177,14 +176,16 @@ public:
         const int xOffset = 20, yOffset = 70;
         const int gridWidth = 80, gridHeight = 40;
         const int gridNumPerLine = 12;
-
-        const std::string btnTextList[4] = { "选择常用", "全选", "全不选", "立即关联" };
+        const int btnWidth = 200;
+        const int btnHeight = 60;
         const cv::Rect btnRectList[4] = {
-            { winWidth - 640, winHeight - 60, 160, 60 }, // defaultCheck
-            { winWidth - 480, winHeight - 60, 160, 60 }, // allCheckBtnRect
-            { winWidth - 320, winHeight - 60, 160, 60 }, // allClearBtnRect
-            { winWidth - 160, winHeight - 60, 160, 60 }, // confirmBtnRect
+            { winWidth - btnWidth * 4, winHeight - btnHeight, btnWidth, btnHeight }, // defaultCheck
+            { winWidth - btnWidth * 3, winHeight - btnHeight, btnWidth, btnHeight }, // allCheckBtnRect
+            { winWidth - btnWidth * 2, winHeight - btnHeight, btnWidth, btnHeight }, // allClearBtnRect
+            { winWidth - btnWidth, winHeight - btnHeight, btnWidth, btnHeight }, // confirmBtnRect
         };
+
+        const int btnTextList[4] = { 7, 8, 9, 10 };
 
         int idx = 0;
         for (const auto& ext : allSupportExt) {
@@ -203,11 +204,10 @@ public:
             const cv::Rect& rect = btnRectList[i];
             cv::Rect rect2{ rect.x + 4, rect.y + 8, rect.width - 8, rect.height - 12 };
             cv::rectangle(winCanvas, rect2, cv::Scalar(200, 200, 200, 255), -1);
-            textDrawer.putAlignCenter(winCanvas, rect, btnTextList[i].c_str(), cv::Scalar(0, 0, 0, 255));
+            textDrawer.putAlignCenter(winCanvas, rect, getUIString(btnTextList[i]), cv::Scalar(0, 0, 0, 255));
         }
 
-        const char* tips = "本软件原生绿色单文件，请把软件放置到合适位置再关联文件格式，若软件位置变化则需重新关联。\n若不再使用本软件，请点击【全不选】再点击【立即关联】即可移除所有关联关系。";
-        textDrawer.putAlignLeft(winCanvas, { 20, winHeight - 200, winWidth - 20, winHeight }, tips, cv::Scalar(0, 0, 0, 255));
+        textDrawer.putAlignLeft(winCanvas, { 20, winHeight - 200, winWidth - 20, winHeight }, getUIString(11), cv::Scalar(0, 0, 0, 255));
     }
 
     void refreshHelpTab() {
@@ -217,7 +217,7 @@ public:
     void refreshAboutTab() {
         jarkUtils::overlayImg(winCanvas, aboutPage, 0, 50);
         textDrawer.putAlignCenter(winCanvas, { 0, 580, 400, 40 }, jarkUtils::wstringToUtf8(appVersion).c_str(), { 186, 38, 60, 255 });
-        textDrawer.putAlignCenter(winCanvas, { 0, 670, 400, 40 }, "[Build time]", { 186, 38, 60, 255 });
+        textDrawer.putAlignCenter(winCanvas, { 0, 670, 400, 40 }, getUIString(19), {186, 38, 60, 255});
         textDrawer.putAlignCenter(winCanvas, { 0, 700, 400, 40 }, jarkUtils::COMPILE_DATE_TIME, { 186, 38, 60, 255 });
     }
 
@@ -309,11 +309,13 @@ public:
         const int xOffset = 20, yOffset = 70;
         const int gridWidth = 80, gridHeight = 40;
         const int gridNumPerLine = 12;
+        const int btnWidth = 200;
+        const int btnHeight = 60;
         const cv::Rect btnRectList[4] = {
-            { winWidth - 640, winHeight - 60, 160, 60 }, // defaultCheck
-            { winWidth - 480, winHeight - 60, 160, 60 }, // allCheckBtnRect
-            { winWidth - 320, winHeight - 60, 160, 60 }, // allClearBtnRect
-            { winWidth - 160, winHeight - 60, 160, 60 }, // confirmBtnRect
+            { winWidth - btnWidth * 4, winHeight - btnHeight, btnWidth, btnHeight }, // defaultCheck
+            { winWidth - btnWidth * 3, winHeight - btnHeight, btnWidth, btnHeight }, // allCheckBtnRect
+            { winWidth - btnWidth * 2, winHeight - btnHeight, btnWidth, btnHeight }, // allClearBtnRect
+            { winWidth - btnWidth, winHeight - btnHeight, btnWidth, btnHeight }, // confirmBtnRect
         };
 
         if (event == cv::EVENT_LBUTTONUP) {
@@ -364,10 +366,10 @@ public:
                 }
 
                 if (SetupFileAssociations(checkedExtW, unCheckedExtW)) {
-                    MessageBoxW(nullptr, L"文件关联设置成功！", L"JarkViewer看图", MB_OK | MB_ICONINFORMATION);
+                    MessageBoxW(nullptr, getUIStringW(2), getUIStringW(1), MB_OK | MB_ICONINFORMATION);
                 }
                 else {
-                    MessageBoxW(nullptr, L"文件关联设置失败！", L"JarkViewer看图", MB_OK | MB_ICONERROR);
+                    MessageBoxW(nullptr, getUIStringW(3), getUIStringW(1), MB_OK | MB_ICONERROR);
                 }
             }
         }

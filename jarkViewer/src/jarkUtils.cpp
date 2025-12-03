@@ -189,7 +189,7 @@ bool jarkUtils::limitSizeTo16K(cv::Mat& image) {
         int newWidth = static_cast<int>(image.cols * scale);
         int newHeight = static_cast<int>(image.rows * scale);
         cv::resize(image, image, cv::Size(newWidth, newHeight), 0, 0, cv::INTER_LINEAR);
-        MessageBoxW(nullptr, std::format(L"图像分辨率太大，将缩放到 {}x{}", image.cols, image.rows).c_str(), L"提示", MB_OK | MB_ICONWARNING);
+        MessageBoxW(nullptr, std::format(L"{} {}x{}", getUIStringW(16), image.cols, image.rows).c_str(), getUIStringW(15), MB_OK | MB_ICONWARNING);
     }
     return true;
 }
@@ -229,7 +229,7 @@ void jarkUtils::flattenRGBAonWhite(cv::Mat& image) {
 
 void jarkUtils::copyImageToClipboard(const cv::Mat& image) {
     if (image.empty()) {
-        MessageBoxW(nullptr, L"图像为空，无法复制到剪贴板", L"错误", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, getUIStringW(17), getUIStringW(14), MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -247,12 +247,12 @@ void jarkUtils::copyImageToClipboard(const cv::Mat& image) {
             processedImage = image.clone();
         }
         else {
-            MessageBoxW(nullptr, std::format(L"图像通道: {}", processedImage.channels()).c_str(), L"不支持的图像格式", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, std::format(L"{} {}", getUIStringW(18), processedImage.channels()).c_str(), getUIStringW(19), MB_OK | MB_ICONERROR);
             return;
         }
     }
     catch (const cv::Exception& e) {
-        MessageBoxW(nullptr, jarkUtils::utf8ToWstring(e.what()).c_str(), L"图像格式转换失败", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, jarkUtils::utf8ToWstring(e.what()).c_str(), getUIStringW(20), MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -266,14 +266,14 @@ void jarkUtils::copyImageToClipboard(const cv::Mat& image) {
 
     // 打开剪贴板
     if (!OpenClipboard(nullptr)) {
-        MessageBoxW(nullptr, L"无法打开剪贴板", L"错误", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, getUIStringW(21), getUIStringW(14), MB_OK | MB_ICONERROR);
         return;
     }
 
     // 清空剪贴板
     if (!EmptyClipboard()) {
         CloseClipboard();
-        MessageBoxW(nullptr, L"清空剪贴板失败", L"错误", MB_OK | MB_ICONERROR);
+        MessageBoxW(nullptr, getUIStringW(22), getUIStringW(14), MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -541,7 +541,7 @@ std::pair<std::wstring, bool> jarkUtils::saveImageDialogW(wstring_view title) {
     ofn.hwndOwner = NULL;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = L"JPG图像\0*.jpg\0PNG图像\0*.png\0All\0*.*\0";
+    ofn.lpstrFilter = L"JPG\0*.jpg\0PNG\0*.png\0All\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrTitle = title.data();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;

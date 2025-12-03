@@ -2,6 +2,11 @@
 
 ![Version](https://img.shields.io/github/v/release/jark006/JarkViewer) ![Download](https://img.shields.io/github/downloads/jark006/jarkviewer/total) ![Stars](https://img.shields.io/github/stars/jark006/JarkViewer) ![License](https://img.shields.io/github/license/jark006/JarkViewer) ![Platform](https://img.shields.io/badge/OS-Windows%2010/11%2064%20bit-00adef.svg)
 
+<p align="center">
+  中文 |
+  <a href="README_EN.md">English</a>
+</p>
+
 *一个高效便捷的多格式图片查看工具*
 
 ![Preview](preview.png)

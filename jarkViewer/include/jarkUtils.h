@@ -75,6 +75,7 @@ using std::endl;
 #include<opencv2/opencv.hpp>
 #include<opencv2/highgui.hpp>
 
+#include "stringRes.h"
 
 struct ThemeColor {
     uint32_t BG_COLOR;
