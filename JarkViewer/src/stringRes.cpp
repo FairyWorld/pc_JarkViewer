@@ -26,7 +26,7 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"切换动画模式", "Switch Animation Mode"},
     {"幻灯片顺序", "Slideshow Order"},
     {"幻灯片间隔(秒)", "Slideshow Interval (seconds)"},
-    {"编译时间", "[Build time]"},
+    {"编译时间 UTC+8", "[Build time UTC+8]"},
     {"切图动画", "SwitchAnim"},
     {"无动画", "None"},
     {"上下滑动", "Vertical"},

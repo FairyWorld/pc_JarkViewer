@@ -7,7 +7,7 @@
 
 extern std::wstring_view appVersion;
 extern std::wstring_view jarkLink;
-extern std::wstring_view GithubLink;
+extern std::wstring_view RepositoryLink;
 extern std::wstring_view BaiduLink;
 extern std::wstring_view LanzouLink;
 
@@ -32,7 +32,12 @@ private:
     static const int winWidth = 1000;
     static const int winHeight = 800;
     static const int tabHeight = 50;
-    static const int TabWidth = 150;
+    static const int tabWidth = 150;
+
+    static inline const cv::Rect jarkBtnRect{ 440, 100, 300, 120 };
+    static inline const cv::Rect reposityBtnRect{ 440, 280, 520, 90 };
+    static inline const cv::Rect baiduBtnRect{ 440, 380, 520, 116 };
+    static inline const cv::Rect lanzouBtnRect{ 440, 510, 520, 90 };
 
     static inline string windowsNameAnsi;
     static inline volatile bool requestExitFlag = false;
@@ -55,9 +60,14 @@ private:
         rcFileInfo rc;
         rc = jarkUtils::GetResource(IDB_PNG_SETTING_RES, L"PNG");
         settingRes = cv::imdecode(cv::Mat(1, (int)rc.size, CV_8UC1, (uint8_t*)rc.ptr), cv::IMREAD_UNCHANGED);
-
-        helpPage = settingRes({ 0, 100, 1000, 750 });
-        aboutPage = settingRes({ 0, 850, 1000, 750 });
+        if (GlobalVar::settingParameter.UI_LANG == 0) {
+            helpPage = settingRes({ 0, 0, 1000, 750 });
+            aboutPage = settingRes({ 0, 750, 1000, 750 });
+        }
+        else {
+            helpPage = settingRes({ 1000, 0, 1000, 750 });
+            aboutPage = settingRes({ 1000, 750, 1000, 750 });
+        }
 
         // GeneralTab
         if (generalTabCheckBoxList.empty()) {
@@ -130,6 +140,9 @@ public:
         cv::rectangle(winCanvas, { 0, tabHeight, winWidth, winHeight - tabHeight }, cv::Scalar(240, 240, 240, 255), -1);
 
         for (auto& cbox : generalTabCheckBoxList) {
+#ifndef NDEBUG
+            cv::rectangle(winCanvas, cbox.rect, cv::Scalar(40, 40, 255, 255), 1);
+#endif
             cv::Rect rect({ cbox.rect.x + 8, cbox.rect.y + 8, cbox.rect.height - 16, cbox.rect.height - 16 }); //方形
             cv::rectangle(winCanvas, rect, cv::Scalar(0, 0, 0, 255), 4);
             if (*cbox.valuePtr) {
@@ -145,7 +158,9 @@ public:
             int idx = *radio.valuePtr;
             if (idx >= radio.stringIDs.size())
                 idx = 0;
-
+#ifndef NDEBUG
+            cv::rectangle(winCanvas, radio.rect, cv::Scalar(40, 40, 255, 255), 1);
+#endif
             int itemWidth = radio.rect.width / radio.stringIDs.size();
             cv::Rect rect1 = { radio.rect.x + itemWidth * (1 + idx) , radio.rect.y + 4, itemWidth, radio.rect.height - 6 }; // 当前项背景框
             cv::rectangle(winCanvas, rect1, cv::Scalar(255, 230, 150, 255), -1);
@@ -217,14 +232,21 @@ public:
     void refreshAboutTab() {
         jarkUtils::overlayImg(winCanvas, aboutPage, 0, 50);
         textDrawer.putAlignCenter(winCanvas, { 0, 580, 400, 40 }, jarkUtils::wstringToUtf8(appVersion).c_str(), { 186, 38, 60, 255 });
-        textDrawer.putAlignCenter(winCanvas, { 0, 670, 400, 40 }, getUIString(19), {186, 38, 60, 255});
+        textDrawer.putAlignCenter(winCanvas, { 0, 670, 400, 40 }, getUIString(19), { 186, 38, 60, 255 });
         textDrawer.putAlignCenter(winCanvas, { 0, 700, 400, 40 }, jarkUtils::COMPILE_DATE_TIME, { 186, 38, 60, 255 });
+
+#ifndef NDEBUG
+        cv::rectangle(winCanvas, jarkBtnRect, cv::Scalar(40, 40, 255, 255), 1);
+        cv::rectangle(winCanvas, reposityBtnRect, cv::Scalar(40, 40, 255, 255), 1);
+        cv::rectangle(winCanvas, baiduBtnRect, cv::Scalar(40, 40, 255, 255), 1);
+        cv::rectangle(winCanvas, lanzouBtnRect, cv::Scalar(40, 40, 255, 255), 1);
+#endif
     }
 
     void refreshUI() {
         // 绘制标签栏
         cv::rectangle(winCanvas, { 0, 0, winWidth, tabHeight }, cv::Scalar(200, 200, 200, 255), -1);
-        cv::rectangle(winCanvas, { curTabIdx * TabWidth, 0, TabWidth, tabHeight }, cv::Scalar(240, 240, 240, 255), -1);
+        cv::rectangle(winCanvas, { curTabIdx * tabWidth, 0, tabWidth, tabHeight }, cv::Scalar(240, 240, 240, 255), -1);
         textDrawer.putAlignCenter(winCanvas, { 0, 0,150, 50 }, getUIString(2), { 0, 0, 0, 255 });
         textDrawer.putAlignCenter(winCanvas, { 150, 0,150, 50 }, getUIString(3), { 0, 0, 0, 255 });
         textDrawer.putAlignCenter(winCanvas, { 300, 0,150, 50 }, getUIString(4), { 0, 0, 0, 255 });
@@ -390,22 +412,22 @@ public:
             memcpy(GlobalVar::settingParameter.extCheckedListStr, checkedList.data(), checkedList.length() + 1);
     }
 
-    static bool isInside(int x, int y, cv::Rect rect) {
+    static bool isInside(int x, int y, const cv::Rect& rect) {
         return rect.x < x && x < (rect.x + rect.width) && rect.y < y && y < (rect.y + rect.height);
     }
 
     static void handleAboutTab(int event, int x, int y, int flags) {
         if (event == cv::EVENT_LBUTTONUP) {
-            if (isInside(x, y, { 440, 100, 300, 120 })) {
+            if (isInside(x, y, jarkBtnRect)) {
                 jarkUtils::openUrl(jarkLink.data());
             }
-            if (isInside(x, y, { 440, 280, 520, 90 })) {
-                jarkUtils::openUrl(GithubLink.data());
+            if (isInside(x, y, reposityBtnRect)) {
+                jarkUtils::openUrl(RepositoryLink.data());
             }
-            if (isInside(x, y, { 440, 380, 520, 110 })) {
+            if (isInside(x, y, baiduBtnRect)) {
                 jarkUtils::openUrl(BaiduLink.data());
             }
-            if (isInside(x, y, { 440, 510, 520, 90 })) {
+            if (isInside(x, y, lanzouBtnRect)) {
                 jarkUtils::openUrl(LanzouLink.data());
             }
         }
@@ -413,7 +435,7 @@ public:
 
     static void mouseCallback(int event, int x, int y, int flags, void* userData) {
         if (event == cv::EVENT_LBUTTONUP && y < 50) {
-            int newTabIdx = x / TabWidth;
+            int newTabIdx = x / tabWidth;
             if (newTabIdx <= 3 && newTabIdx != curTabIdx) {
                 isNeedRefreshUI = true;
                 switch (curTabIdx) {
