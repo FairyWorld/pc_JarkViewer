@@ -86,7 +86,8 @@ struct ThemeColor {
 constexpr ThemeColor deepTheme{ 0x46, 0xFF282828, 0xFF3C3C3C };
 constexpr ThemeColor lightTheme{ 0xEE, 0xFFDDDDDD, 0xFFFFFFFF };
 
-
+// 不要随意更改此结构体的成员顺序或大小，否则会导致设置文件无法兼容
+// 设置文件大小固定为4096字节
 struct SettingParameter {
     // 常见格式
     static inline std::string_view defaultExtList{ 
@@ -117,7 +118,9 @@ struct SettingParameter {
     int UI_Mode = 0;                        // 界面主题 0:跟随系统  1:浅色  2:深色
     int UI_LANG = 0;                        // 界面语言 0:中文  1:English
 
-    uint32_t reserve[801];
+    int rightClickAction = 0;              // 右键点击行为  0:打开菜单  1:退出程序
+
+    uint32_t reserve[800];
 
     char extCheckedListStr[800];
 

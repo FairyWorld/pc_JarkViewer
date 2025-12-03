@@ -83,6 +83,7 @@ private:
                 {{50, 350, 600, 50}, {20, 21, 22, 23}, &GlobalVar::settingParameter.switchImageAnimationMode },
                 {{50, 400, 600, 50}, {24, 25, 26, 27}, &GlobalVar::settingParameter.UI_Mode },
                 {{50, 450, 450, 50}, {28, 30, 31}, &GlobalVar::settingParameter.UI_LANG },
+                {{50, 500, 450, 50}, {36, 37, 38}, &GlobalVar::settingParameter.rightClickAction },
             };
         }
 
@@ -446,9 +447,11 @@ public:
             }
         }
 
-        if (event == cv::EVENT_RBUTTONUP) { // 右键直接关闭打印窗口
-            requestExit();
-            return;
+        if (event == cv::EVENT_RBUTTONUP) { // 右键
+            if (GlobalVar::settingParameter.rightClickAction == 1) {
+                requestExit();
+                return;
+            }
         }
 
         switch (curTabIdx) {

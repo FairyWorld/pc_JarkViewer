@@ -404,9 +404,11 @@ public:
 
         switch (event) {
 
-        case cv::EVENT_RBUTTONUP: { // 右键直接关闭打印窗口
-            requestExit();
-            return;
+        case cv::EVENT_RBUTTONUP: { // 右键
+            if (GlobalVar::settingParameter.rightClickAction == 1) {
+                requestExit();
+                return;
+            }
         }break;
 
         case cv::EVENT_MOUSEWHEEL: {

@@ -450,7 +450,12 @@ public:
         }
 
         case WM_RBUTTONUP: {//右键
-            operateQueue.push({ ActionENUM::requestExit });
+            if (GlobalVar::settingParameter.rightClickAction == 0) {
+                // TODO 右键菜单
+            }
+            else {
+                operateQueue.push({ ActionENUM::requestExit });
+            }
             return;
         }
 
