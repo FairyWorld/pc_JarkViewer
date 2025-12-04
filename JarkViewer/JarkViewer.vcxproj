@@ -21,7 +21,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -30,7 +30,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>false</UseOfMfc>
@@ -382,7 +382,7 @@
     <ClCompile Include="src\D2D1App.cpp" />
     <ClCompile Include="src\exifParse.cpp" />
     <ClCompile Include="src\ImageDatabase.cpp" />
-    <ClCompile Include="src\JarkViewer.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\libbpg.cpp" />
     <ClCompile Include="src\jarkUtils.cpp" />
     <ClCompile Include="src\TextDrawer.cpp" />

@@ -2,10 +2,10 @@
 .vscode
 build
 x64
-/jarkViewer/jarkViewer.aps
-/jarkViewer/file/home.psd
-/jarkViewer/file/tips.psd
+/JarkViewer/JarkViewer.aps
+/JarkViewer/file/home.psd
+/JarkViewer/file/tips.psd
 /associate_images.bat
 /associate_images_uninstall.bat
 /donate.png
-/jarkViewer/lib/Psd_MT.pdb
+/JarkViewer/lib/Psd_MT.pdb
