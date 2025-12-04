@@ -43,7 +43,7 @@ void D2D1App::loadSettings() {
     fclose(f);
 
     if (readLen == sizeof(SettingParameter) && !memcmp(GlobalVar::settingHeader.data(), tmp.header, GlobalVar::settingHeader.length()))
-        memcpy(&GlobalVar::settingParameter, &tmp, sizeof(SettingParameter));
+        GlobalVar::settingParameter = tmp;
 
     if (GlobalVar::settingParameter.showCmd == SW_NORMAL) {
         int screenWidth = (::GetSystemMetrics(SM_CXFULLSCREEN));

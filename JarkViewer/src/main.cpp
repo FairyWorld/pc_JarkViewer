@@ -21,9 +21,9 @@
 */
 
 std::wstring_view appName = L"JarkViewer";
-std::wstring_view appVersion = L"v1.29";
+std::wstring_view appVersion = L"v1.30";
 std::wstring_view jarkLink = L"https://github.com/jark006";
-std::wstring_view GithubLink = L"https://github.com/jark006/JarkViewer";
+std::wstring_view RepositoryLink = L"https://github.com/jark006/JarkViewer";
 std::wstring_view BaiduLink = L"https://pan.baidu.com/s/1ka7p__WVw2du3mnOfqWceQ?pwd=6666"; // 密码 6666
 std::wstring_view LanzouLink = L"https://jark006.lanzout.com/b0ko7mczg"; // 密码 6666
 
@@ -311,12 +311,12 @@ public:
             if (filePath.empty()) { //直接打开软件，没有传入参数
                 imgFileList.emplace_back(m_wndCaption);
                 curFileIdx = 0;
-                imgDB.put(m_wndCaption, { ImageFormat::Still, imgDB.getHomeMat(), {}, {}, "使用Ctrl+O或拖入图像文件打开" });
+                imgDB.put(m_wndCaption, { ImageFormat::Still, imgDB.getHomeMat(), {}, {}, getUIString(32)});
             }
             else { // 打开的文件不支持，默认加到尾部
                 imgFileList.emplace_back(fullPath.wstring());
                 curFileIdx = (int)imgFileList.size() - 1;
-                imgDB.put(fullPath.wstring(), { ImageFormat::Still, imgDB.getErrorTipsMat(), {}, {}, "图像格式不支持" });
+                imgDB.put(fullPath.wstring(), { ImageFormat::Still, imgDB.getErrorTipsMat(), {}, {}, getUIString(33) });
             }
         }
 
@@ -346,7 +346,7 @@ public:
                     operateQueue.push({ ActionENUM::normalFresh });
                 }break;
                 case 3: {
-                    auto [filePath, isJPG] = jarkUtils::saveImageDialogW(L"保存当前帧到图像文件");
+                    auto [filePath, isJPG] = jarkUtils::saveImageDialogW(getUIStringW(4));
                     if (filePath.length() <= 2)
                         break;
 
@@ -450,7 +450,12 @@ public:
         }
 
         case WM_RBUTTONUP: {//右键
-            operateQueue.push({ ActionENUM::requestExit });
+            if (GlobalVar::settingParameter.rightClickAction == 0) {
+                // TODO 右键菜单
+            }
+            else {
+                operateQueue.push({ ActionENUM::requestExit });
+            }
             return;
         }
 
@@ -645,8 +650,8 @@ public:
 
                 if (IDYES == MessageBoxW(
                     m_hWnd,
-                    L"是否要将此动图或实况图视频的每一帧批量保存到png图片文件？",
-                    L"保存每一帧到原图文件夹",
+                    std::format(L"{}{}", getUIStringW(5), frames.size()).c_str(),
+                    getUIStringW(6),
                     MB_YESNO | MB_ICONQUESTION
                 )) {
                     std::thread saveThread([](std::wstring filePath, std::shared_ptr<ImageAsset> imageAssetPtr) {
@@ -1902,10 +1907,10 @@ public:
         } break;
 
         case ActionENUM::deleteImg: {
-            if (imgFileList.empty() || curFileIdx < 0 || curFileIdx >= (int)imgFileList.size()){break;}
+            if (imgFileList.empty() || curFileIdx < 0 || curFileIdx >= (int)imgFileList.size()) { break; }
 
             const std::wstring& target = imgFileList[curFileIdx];
-            if (target == m_wndCaption){
+            if (target == m_wndCaption) {
                 break;
             }
 
@@ -1913,7 +1918,7 @@ public:
                 if (imgFileList.empty()) {
                     imgFileList.emplace_back(m_wndCaption);
                     curFileIdx = 0;
-                    imgDB.put(m_wndCaption, { ImageFormat::Still, imgDB.getHomeMat(), {}, {}, "使用Ctrl+O或拖入图像文件打开" });
+                    imgDB.put(m_wndCaption, { ImageFormat::Still, imgDB.getHomeMat(), {}, {}, getUIString(32)});
                 }
                 else if (curFileIdx >= (int)imgFileList.size()) {
                     curFileIdx = (int)imgFileList.size() - 1;
@@ -1923,7 +1928,7 @@ public:
                     imgFileList[curFileIdx],
                     imgFileList[(curFileIdx + 1) % imgFileList.size()]);
                 curPar.Init(winWidth, winHeight);
-            };
+                };
 
             namespace fs = std::filesystem;
             const fs::path targetPath(target);
@@ -1939,8 +1944,8 @@ public:
 
             bool shouldDelete = true;
             if (GlobalVar::settingParameter.isNoteBeforeDelete) {
-                auto tips = std::format(L"确定要将以下文件移至回收站吗？\n\n{}", targetPath.wstring());
-                shouldDelete = MessageBoxW(m_hWnd, tips.c_str(), L"JarkViewer看图",
+                auto tips = std::format(L"{}\n\n{}", getUIStringW(7), targetPath.wstring());
+                shouldDelete = MessageBoxW(m_hWnd, tips.c_str(), getUIStringW(1),
                     MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) == IDYES;
             }
 
@@ -1959,8 +1964,8 @@ public:
             int opResult = SHFileOperationW(&fileOp);
             if (opResult != 0 || fileOp.fAnyOperationsAborted) {
                 DWORD lastError = opResult != 0 ? (DWORD)opResult : GetLastError();
-                auto errMsg = std::format(L"删除失败，错误码 0x{:08X}", lastError);
-                MessageBoxW(m_hWnd, errMsg.c_str(), L"JarkViewer看图", MB_OK | MB_ICONERROR);
+                auto errMsg = std::format(L"{} 0x{:08X}", getUIStringW(8), lastError);
+                MessageBoxW(m_hWnd, errMsg.c_str(), getUIStringW(1), MB_OK | MB_ICONERROR);
                 break;
             }
 
@@ -2027,21 +2032,22 @@ public:
         drawExtraUI(mainCanvas);
 
         if (curPar.imageAssetPtr->format == ImageFormat::Animated && curPar.isAnimationPause) {
-            wstring str = std::format(L"逐帧浏览 [{}/{}] {}% ",
+            wstring str = std::format(L"{} [{}/{}] {}% {}  ",
+                getUIStringW(9),
                 curPar.curFrameIdx + 1, curPar.curFrameIdxMax + 1,
-                curPar.zoomCur * 100ULL / curPar.ZOOM_BASE)
-                + imgFileList[curFileIdx];
+                curPar.zoomCur * 100ULL / curPar.ZOOM_BASE,
+                imgFileList[curFileIdx]);
             if (curPar.rotation)
-                str += (curPar.rotation == 1 ? L"  逆时针旋转90°" : (curPar.rotation == 3 ? L"  顺时针旋转90°" : (L"  旋转180°")));
+                str += (curPar.rotation == 1 ? getUIStringW(10) : (curPar.rotation == 3 ? getUIStringW(11) : getUIStringW(12)));
             SetWindowTextW(m_hWnd, str.c_str());
         }
         else {
-            wstring str = std::format(L" [{}/{}] {}% ",
+            wstring str = std::format(L" [{}/{}] {}% {}  ",
                 curFileIdx + 1, imgFileList.size(),
-                curPar.zoomCur * 100ULL / curPar.ZOOM_BASE)
-                + imgFileList[curFileIdx];
+                curPar.zoomCur * 100ULL / curPar.ZOOM_BASE,
+                imgFileList[curFileIdx]);
             if (curPar.rotation)
-                str += (curPar.rotation == 1 ? L"  逆时针旋转90°" : (curPar.rotation == 3 ? L"  顺时针旋转90°" : (L"  旋转180°")));
+                str += (curPar.rotation == 1 ? getUIStringW(10) : (curPar.rotation == 3 ? getUIStringW(11) : getUIStringW(12)));
             SetWindowTextW(m_hWnd, str.c_str());
         }
 
@@ -2119,7 +2125,7 @@ int WINAPI wWinMain(
         app.Run();
     }
     else {
-        MessageBoxW(NULL, L"窗口创建失败！", L"错误", MB_ICONERROR);
+        MessageBoxW(NULL, getUIStringW(13), getUIStringW(14), MB_ICONERROR);
     }
 
     ::CoUninitialize();

@@ -13,7 +13,7 @@ struct PrintParams {
     //int layoutMode = 0;           // 0=适应, 1=填充, 2=原始比例
     int brightness = 100;         // 亮度调整 (0 ~ 200)
     int contrast = 100;           // 对比度调整 (0 ~ 200)
-    int colorMode = 1;            // 颜色模式 0:彩色  1:黑白  2:黑白文档 3:黑白点阵(二值像素)
+    int colorMode = 1;            // 颜色模式 0:彩色  1:黑白  2:黑白文档 3:黑白抖动(二值像素)
     bool invertColors = false;    // 是否反相
 
     bool isParamsChange = false;
@@ -29,7 +29,7 @@ struct PrintParams {
 
 class Printer {
 private:
-    string windowsNameAnsi = jarkUtils::utf8ToAnsi("打印");
+    string windowsNameAnsi = jarkUtils::utf8ToAnsi(getUIString(29));
     const char* windowsName = windowsNameAnsi.c_str();
 
     PrintParams params{};
@@ -48,16 +48,30 @@ private:
         rc = jarkUtils::GetResource(IDB_PNG_PRINTER_RES, L"PNG");
         printerRes = cv::imdecode(cv::Mat(1, (int)rc.size, CV_8UC1, (uint8_t*)rc.ptr), cv::IMREAD_UNCHANGED);
 
-        buttonColorMode.push_back(printerRes({ 0, 0, 400, 50 }));
-        buttonColorMode.push_back(printerRes({ 400, 0, 400, 50 }));
-        buttonColorMode.push_back(printerRes({ 0, 50, 400, 50 }));
-        buttonColorMode.push_back(printerRes({ 400, 50, 400, 50 }));
+        if (GlobalVar::settingParameter.UI_LANG == 0) {
+            buttonColorMode.push_back(printerRes({ 0, 0, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 400, 0, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 0, 50, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 400, 50, 400, 50 }));
 
-        buttonNormal = printerRes({ 0, 100, 200, 50 });
-        buttonInvert = printerRes({ 200, 100, 200, 50 });
+            buttonNormal = printerRes({ 0, 100, 200, 50 });
+            buttonInvert = printerRes({ 200, 100, 200, 50 });
 
-        buttonPrint = printerRes({ 400, 100, 200, 50 });
-        trackbarBg = printerRes({ 0, 150, 800, 100 });
+            buttonPrint = printerRes({ 400, 100, 200, 50 });
+            trackbarBg = printerRes({ 0, 150, 800, 100 });
+        }
+        else {
+            buttonColorMode.push_back(printerRes({ 800, 0, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 1200, 0, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 800, 50, 400, 50 }));
+            buttonColorMode.push_back(printerRes({ 1200, 50, 400, 50 }));
+
+            buttonNormal = printerRes({ 800, 100, 200, 50 });
+            buttonInvert = printerRes({ 1000, 100, 200, 50 });
+
+            buttonPrint = printerRes({ 1200, 100, 200, 50 });
+            trackbarBg = printerRes({ 800, 150, 800, 100 });
+        }
 
         params.brightness = GlobalVar::settingParameter.printerBrightness;
         params.contrast = GlobalVar::settingParameter.printerContrast;
@@ -152,7 +166,7 @@ public:
     // 均衡全图亮度 再调整亮度对比度 适合打印文档
     static cv::Mat balancedImageBrightness(const cv::Mat& input_img) {
         if (input_img.type() != CV_8UC3) {
-            MessageBoxW(nullptr, L"balancedImageBrightness转换图像错误: 只接受BGR/CV_8UC3类型图像", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"balancedImageBrightness转换图像错误: 只接受BGR/CV_8UC3类型图像", getUIStringW(14), MB_OK | MB_ICONERROR);
             return {};
         }
 
@@ -193,11 +207,11 @@ public:
     // 将cv::Mat转换为HBITMAP
     HBITMAP MatToHBITMAP(const cv::Mat& image) {
         if (image.empty()) {
-            MessageBoxW(nullptr, L"MatToHBITMAP转换图像错误: 空图像", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"MatToHBITMAP转换图像错误: 空图像", getUIStringW(14), MB_OK | MB_ICONERROR);
             return nullptr;
         }
         if (image.type() != CV_8UC3) {
-            MessageBoxW(nullptr, L"MatToHBITMAP转换图像错误: 只接受BGR/CV_8UC3类型图像", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"MatToHBITMAP转换图像错误: 只接受BGR/CV_8UC3类型图像", getUIStringW(14), MB_OK | MB_ICONERROR);
             return nullptr;
         }
 
@@ -278,7 +292,7 @@ public:
     static void ApplyImageAdjustments(cv::Mat& image, int brightness, int contrast, int colorMode, bool invertColors) {
         if (image.empty()) return;
 
-        if (colorMode == 1 || colorMode == 3) { // 黑白、黑白点阵也需要先灰度
+        if (colorMode == 1 || colorMode == 3) { // 黑白、黑白抖动也需要先灰度
             cv::Mat gray;
             cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
             cv::cvtColor(gray, image, cv::COLOR_GRAY2BGR);
@@ -290,7 +304,7 @@ public:
         // contrast:   0 ~ 200, 100是中间值，对比度不增不减
         adjustBrightnessContrast(image, brightness, contrast);
 
-        if (colorMode == 3) // 最后处理 黑白点阵
+        if (colorMode == 3) // 最后处理 黑白抖动
             floydSteinbergDithering(image);
 
         if (invertColors) {
@@ -298,7 +312,7 @@ public:
         }
     }
 
-    // 误差扩散抖动算法  制作二值点阵图
+    // 误差扩散抖动算法
     static void floydSteinbergDithering(cv::Mat& image) {
         cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
@@ -390,9 +404,11 @@ public:
 
         switch (event) {
 
-        case cv::EVENT_RBUTTONUP: { // 右键直接关闭打印窗口
-            requestExit();
-            return;
+        case cv::EVENT_RBUTTONUP: { // 右键
+            if (GlobalVar::settingParameter.rightClickAction == 1) {
+                requestExit();
+                return;
+            }
         }break;
 
         case cv::EVENT_MOUSEWHEEL: {
@@ -447,7 +463,7 @@ public:
 
             if ((0 < x) && (x < 100) && (y < 50)) { // 彩色
                 if (params->colorMode != 0) {
-                    if (params->colorMode >= 2) { // 若之前是黑白文档/点阵模式，则恢复默认亮度对比度
+                    if (params->colorMode >= 2) { // 若之前是黑白文档/抖动模式，则恢复默认亮度对比度
                         params->brightness = 100;
                         params->contrast = 100;
                     }
@@ -458,7 +474,7 @@ public:
 
             if ((100 < x) && (x < 200) && (y < 50)) { // 黑白
                 if (params->colorMode != 1) {
-                    if (params->colorMode >= 2) { // 若之前是黑白文档/点阵模式，则恢复默认亮度对比度
+                    if (params->colorMode >= 2) { // 若之前是黑白文档/抖动模式，则恢复默认亮度对比度
                         params->brightness = 100;
                         params->contrast = 100;
                     }
@@ -476,7 +492,7 @@ public:
                 }
             }
 
-            if ((300 < x) && (x < 400) && (y < 50)) { // 黑白点阵
+            if ((300 < x) && (x < 400) && (y < 50)) { // 黑白抖动
                 if (params->colorMode != 3) {
                     params->colorMode = 3;
                     params->brightness = 80;
@@ -568,7 +584,7 @@ public:
                 params.saveToFile = false;
 
                 std::thread saveImageThread([](cv::Mat image, PrintParams* params) {
-                    auto [filePath, isJPG] = jarkUtils::saveImageDialogW(L"保存到图像文件");
+                    auto [filePath, isJPG] = jarkUtils::saveImageDialogW(getUIStringW(23));
                     if (filePath.empty())
                         return;
 
@@ -597,12 +613,12 @@ public:
         auto bgrMat = matToBGR(image);
 
         if (bgrMat.empty()) {
-            MessageBoxW(nullptr, L"图像转换到BGR发生错误", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"图像转换到BGR发生错误", getUIStringW(14), MB_OK | MB_ICONERROR);
             return;
         }
 
         if (!jarkUtils::limitSizeTo16K(bgrMat)) {
-            MessageBoxW(nullptr, L"调整图像尺寸发生错误", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"调整图像尺寸发生错误", getUIStringW(14), MB_OK | MB_ICONERROR);
             return;
         }
 
@@ -621,7 +637,7 @@ public:
         if (!PrintDlgW(&pd))
             return;
         if (!pd.hDC) {
-            MessageBoxW(nullptr, L"无法获得打印机参数", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"无法获得打印机参数", getUIStringW(14), MB_OK | MB_ICONERROR);
             return;
         }
 
@@ -641,7 +657,7 @@ public:
         if (StartPage(pd.hDC) <= 0) {
             EndDoc(pd.hDC);
             DeleteDC(pd.hDC);
-            MessageBoxW(nullptr, L"无法初始化打印业StartPage", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"无法初始化打印业StartPage", getUIStringW(14), MB_OK | MB_ICONERROR);
             return;
         }
 
@@ -671,7 +687,7 @@ public:
 
         HBITMAP hBitmap = MatToHBITMAP(output);
         if (!hBitmap) {
-            MessageBoxW(nullptr, L"无法转换图像到打印格式HBITMAP", L"错误", MB_OK | MB_ICONERROR);
+            MessageBoxW(nullptr, L"无法转换图像到打印格式HBITMAP", getUIStringW(14), MB_OK | MB_ICONERROR);
             return;
         }
 

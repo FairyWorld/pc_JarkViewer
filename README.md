@@ -2,6 +2,11 @@
 
 ![Version](https://img.shields.io/github/v/release/jark006/JarkViewer) ![Download](https://img.shields.io/github/downloads/jark006/jarkviewer/total) ![Stars](https://img.shields.io/github/stars/jark006/JarkViewer) ![License](https://img.shields.io/github/license/jark006/JarkViewer) ![Platform](https://img.shields.io/badge/OS-Windows%2010/11%2064%20bit-00adef.svg)
 
+<p align="center">
+  中文 |
+  <a href="README_EN.md">English</a>
+</p>
+
 *一个高效便捷的多格式图片查看工具*
 
 ![Preview](preview.png)
@@ -26,10 +31,10 @@
 
 进入打印功能可以简单调整图像的 `对比度`、`亮度`、`是否反色` 等等，然后再决定 **另存为** 其他图像文件或 **继续打印**。
 
-还可以选择颜色模式：`彩色`、`黑白`、`黑白文档`、`黑白点阵`。
+还可以选择颜色模式：`彩色`、`黑白`、`黑白文档`、`黑白抖动`。
 
 1. **黑白文档**: 均衡全图亮度，突出字迹，避免局部阴影的观感影响，适合打印拍摄的文字纸张图像。
-1. **黑白点阵**: 使用纯黑像素的分布密度模拟像素灰度值。此模式适合针式打印机和热敏打印机，也能打印出较好的图像效果。
+1. **黑白抖动**: 使用纯黑像素的分布密度模拟像素灰度值。此模式适合针式打印机和热敏打印机，也能打印出较好的图像效果。
 
 ![printerPreview](printerPreview.png)
 

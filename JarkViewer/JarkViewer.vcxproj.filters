@@ -633,6 +633,9 @@
     <ClInclude Include="include\SVGPreprocessor.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\stringRes.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -717,6 +720,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\tinyxml2.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stringRes.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

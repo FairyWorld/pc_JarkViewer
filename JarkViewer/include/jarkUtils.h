@@ -75,6 +75,7 @@ using std::endl;
 #include<opencv2/opencv.hpp>
 #include<opencv2/highgui.hpp>
 
+#include "stringRes.h"
 
 struct ThemeColor {
     uint32_t BG_COLOR;
@@ -85,7 +86,8 @@ struct ThemeColor {
 constexpr ThemeColor deepTheme{ 0x46, 0xFF282828, 0xFF3C3C3C };
 constexpr ThemeColor lightTheme{ 0xEE, 0xFFDDDDDD, 0xFFFFFFFF };
 
-
+// 不要随意更改此结构体的成员顺序或大小，否则会导致设置文件无法兼容
+// 设置文件大小固定为4096字节
 struct SettingParameter {
     // 常见格式
     static inline std::string_view defaultExtList{ 
@@ -108,20 +110,31 @@ struct SettingParameter {
     bool isAllowZoomAnimation = true;
     bool isOptimizeSlide = true;            // 优化图像平移性能 （实为渲染工作量偷懒减半）
     bool isNoteBeforeDelete = true;         // 删除前提示
-    bool reserve4 = false;
     int switchImageAnimationMode = 0;       // 0: 无动画  1:上下滑动  2:左右滑动
 
     int pptOrder = 0;                       // 幻灯片模式  0: 顺序  1:逆序  2:随机
     int pptTimeout = 5;                     // 幻灯片模式  切换间隔 1 ~ 300 秒
 
     int UI_Mode = 0;                        // 界面主题 0:跟随系统  1:浅色  2:深色
+    int UI_LANG = 0;                        // 界面语言 0:中文  1:English
 
-    uint32_t reserve[801];
+    int rightClickAction = 0;              // 右键点击行为  0:打开菜单  1:退出程序
+
+    uint32_t reserve[800];
 
     char extCheckedListStr[800];
 
     SettingParameter() {
         memcpy(extCheckedListStr, defaultExtList.data(), defaultExtList.length() + 1);
+        UI_LANG = (PRIMARYLANGID(GetUserDefaultUILanguage()) == LANG_CHINESE) ? 0 : 1;
+    }
+
+    SettingParameter(const SettingParameter& other) {
+        memcpy(this, &other, sizeof(SettingParameter));
+
+        // 检查参数
+        if (UI_LANG < 0 || UI_LANG > 1) // 目前仅中英，索引范围0~1
+            UI_LANG = 0;
     }
 };
 
