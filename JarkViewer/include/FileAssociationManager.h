@@ -12,13 +12,6 @@ private:
     std::wstring m_appName;
     std::wstring m_progId;
 
-    // 获取当前程序的完整路径
-    std::wstring GetCurrentAppPath() {
-        wchar_t path[MAX_PATH];
-        GetModuleFileNameW(nullptr, path, MAX_PATH);
-        return std::wstring(path);
-    }
-
     // 设置注册表值
     bool SetRegistryValue(HKEY hKey, const std::wstring& subKey, const std::wstring& valueName, const std::wstring& value) {
         HKEY hSubKey;
@@ -143,7 +136,7 @@ private:
 
 public:
     FileAssociationManager() {
-        m_appPath = GetCurrentAppPath();
+        m_appPath = jarkUtils::getCurrentAppPath();
         m_appName = L"JarkViewer";
         m_progId = L"JarkViewer.ImageFile";
     }

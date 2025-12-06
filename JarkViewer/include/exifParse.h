@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <mutex>
+#include <unordered_set>
+#include <unordered_map>
 #include <stdint.h>
 #include "exiv2/exiv2.hpp"
 
@@ -16,6 +18,16 @@ public:
     static std::string getExif(std::wstring_view path, const uint8_t* buf, size_t fileSize);
 
 private:
+
+    //Unicode string tags in EXIF
+    static inline const std::unordered_set<std::string> exifTagsUnicodeStr{
+        "Exif.Image.XPTitle",
+        "Exif.Image.XPComment",
+        "Exif.Image.XPAuthor",
+        "Exif.Image.XPKeywords",
+        "Exif.Image.XPSubject",
+    };
+
     // https://exiv2.org/tags.html
     // https://www.colorpilot.com/exiftable-thumbnail.html
     // https://exiftool.org/TagNames/PNG.html

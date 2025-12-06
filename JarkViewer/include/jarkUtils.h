@@ -70,6 +70,8 @@ using std::endl;
 #pragma comment(lib, "Shlwapi.lib")
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "wmcodecdspuuid.lib")
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "Ole32.lib")
 
 #include<opencv2/core.hpp>
 #include<opencv2/opencv.hpp>
@@ -442,6 +444,8 @@ public:
     static void wstringReplace(std::wstring& src, std::wstring_view oldBlock, std::wstring_view newBlock);
 
     static void activateWindow(HWND hwnd);
+
+    static std::wstring getCurrentAppPath();
 
     static inline const char COMPILE_DATE_TIME[32] = {
         __DATE__[7],

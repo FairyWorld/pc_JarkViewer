@@ -649,3 +649,10 @@ void jarkUtils::activateWindow(HWND hwnd) {
         SetForegroundWindow(hwnd);
     }
 }
+
+// 获取当前程序的完整路径
+std::wstring jarkUtils::getCurrentAppPath() {
+    wchar_t path[MAX_PATH] = { 0 };
+    GetModuleFileNameW(nullptr, path, MAX_PATH);
+    return std::wstring(path);
+}

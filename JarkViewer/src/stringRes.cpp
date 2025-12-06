@@ -17,7 +17,7 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"选择常用", "Select Common"},
     {"全选", "Select All"},
     {"全不选", "Clear All"},
-    {"立即关联", "Apply"},
+    {"立即关联", "Apply"}, // 10
     {"本软件原生绿色单文件，请把软件放置到合适位置再关联文件格式，若软件位置变化则需重新关联。\n若不再使用本软件，请点击【全不选】再点击【立即关联】即可移除所有关联关系。", "This software is a portable single file.  Please place the software in an appropriate location before associating file formats.\nIf you no longer to use this software,  please click \"Clear All\" and then click \"Apply\" to remove all associations." },
     {"旋转动画", "Rotate Animation"},
     {"缩放动画", "Zoom Animation"},
@@ -27,7 +27,7 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"幻灯片顺序", "Slideshow Order"},
     {"幻灯片间隔(秒)", "Slideshow Interval (seconds)"},
     {"编译时间 UTC+8", "[Build time UTC+8]"},
-    {"切图动画", "SwitchAnim"},
+    {"切图动画", "SwitchAnim"},  // 20
     {"无动画", "None"},
     {"上下滑动", "Vertical"},
     {"左右滑动", "Horizontal"},
@@ -37,7 +37,7 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"深色", "Dark"},
     {"语言", "Language"},
     {"打印", "Printer"},
-    {"中文", "中文"},
+    {"中文", "中文"},  // 30
     {"English", "English"},
     {"使用Ctrl+O或拖入图像文件打开", "Use Ctrl+O or drag the image file to open."},
     {"图像格式不支持", "Image format not supported"},
@@ -46,6 +46,19 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"鼠标右键", "RightClick"},
     {"菜单", "Menu"},
     {"退出程序", "Exit"},
+    {"路径", "Path"},
+    {"大小", "FileSize"},  // 40
+    {"分辨率", "Resolution"},
+    {"【按 C 键复制图像全部信息】", "[Press C to copy all image information]"},
+    {"\n正提示词: ", "\nPositive prompt: "},
+    {"\n\n反提示词: ", "\n\nNegative prompt: "},
+    {"\n\n参数: Steps:", "\n\nParameter: Steps:"},
+    {"\nAI生图提示词 Prompt:\n", "\nAI-generated image prompt:\n"},
+    {"北纬 N", "North Latitude"},
+    {"南纬 S", "South Latitude"},
+    {"东经 E", "East Longitude"},
+    {"西经 W", "West Longitude"},  // 50
+    {"子图数量", "Number of subImage"},
     {"XX", "XX"},
     {"XX", "XX"},
     {"XX", "XX"},
@@ -53,6 +66,7 @@ const char* const UIStringTable[STRING_MAX_NUM][2] = {
     {"XX", "XX"},
     {"XX", "XX"},
     {"XX", "XX"},
+
 };
 
 
@@ -81,7 +95,7 @@ const wchar_t* const UIStringTableW[STRING_MAX_NUM][2] = {
     {L"无法打开剪贴板", L"Unable to open clipboard"},
     {L"清空剪贴板失败", L"Clearing clipboard failed"},
     {L"保存到图像文件", L"Save to image file"},
-    {L"XX", L"XX"},
+    {L"若不再使用本软件，请关闭软件后再手动删除配置文件:\n", L"If no longer in use this program, please close the program and then manually delete the configuration files:  "},
     {L"XX", L"XX"},  // 25
     {L"XX", L"XX"},
 

@@ -419,9 +419,6 @@ cv::Mat ImageDatabase::loadHeic(wstring_view path, const vector<uint8_t>& buf) {
     if (buf.empty())
         return {};
 
-    auto exifStr = std::format("路径: {}\n大小: {}",
-        jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(buf.size()));
-
     auto filetype_check = heif_check_filetype(buf.data(), 12);
     if (filetype_check == heif_filetype_no) {
         JARK_LOG("Input file is not an HEIF file: {}", jarkUtils::wstringToUtf8(path));
@@ -869,7 +866,7 @@ std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vect
 
     cv::Mat result(maxHeight, totalWidth, CV_8UC4, cv::Scalar(0, 0, 0, 0));
 
-    string resolutionStr = "\n分辨率:";
+    string resolutionStr = std::format("\n{}:", getUIString(41));
     int imageCnt = 0;
     int currentX = 0;
     for (const auto& img : imgs) {
@@ -882,7 +879,7 @@ std::tuple<cv::Mat, string> ImageDatabase::loadICO(wstring_view path, const vect
         resolutionStr += std::format(" {}x{}", img.cols, img.rows);
         imageCnt++;
     }
-    resolutionStr += std::format("\n子图数量: {}", imageCnt);
+    resolutionStr += std::format("\n{}: {}", getUIString(51), imageCnt);
 
     return { result,ExifParse::getSimpleInfo(path, result.cols, result.rows, buf.data(), buf.size()) + resolutionStr };
 }

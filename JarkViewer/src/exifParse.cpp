@@ -3,18 +3,11 @@
 
 
 std::string ExifParse::getSimpleInfo(wstring_view path, int width, int height, const uint8_t* buf, size_t fileSize) {
-    if (GlobalVar::settingParameter.UI_LANG == 0)
-        return (path.ends_with(L".ico") || (width == 0 && height == 0)) ?
-        std::format("路径: {}\n大小: {}\n",
-            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize)) :
-        std::format("路径: {}\n大小: {}\n分辨率: {}x{}",
-            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize), width, height);
-    else
-        return(path.ends_with(L".ico") || (width == 0 && height == 0)) ?
-        std::format("Path: {}\nSize: {}\n",
-            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize)) :
-        std::format("Path: {}\nSize: {}\nResolution: {}x{}",
-            jarkUtils::wstringToUtf8(path), jarkUtils::size2Str(fileSize), width, height);
+    return (path.ends_with(L".ico") || width == 0 || height == 0) ?
+        std::format("{}: {}\n{}: {}\n",
+            getUIString(39), jarkUtils::wstringToUtf8(path), getUIString(40), jarkUtils::size2Str(fileSize)) :
+        std::format("{}: {}\n{}: {}\n{}: {}x{}",
+            getUIString(39), jarkUtils::wstringToUtf8(path), getUIString(40), jarkUtils::size2Str(fileSize), getUIString(41), width, height);
 }
 
 std::string ExifParse::handleMathDiv(string_view str) {
@@ -71,109 +64,102 @@ std::string ExifParse::exifDataToString(wstring_view path, const Exiv2::ExifData
 
     for (const auto& tag : exifData) {
         const std::string& tagName = tag.key();
+        bool toEnd = true;
         std::string translatedTagName;
-        bool toEnd;
-        if (tagName.starts_with("Exif.SubImage")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(14);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("子图" + tagName.substr(13, 2) + exifTagsMap.at(tag)) :
-                ("子图" + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.Thumbnail")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(14);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("缩略图." + exifTagsMap.at(tag)) :
-                ("缩略图" + tagName.substr(14));
-        }
-        else if (tagName.starts_with("Exif.Nikon")) {
-            toEnd = true;
-            translatedTagName = "尼康" + tagName.substr(10);
-        }
-        else if (tagName.starts_with("Exif.CanonCs")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(12);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("佳能Cs." + exifTagsMap.at(tag)) :
-                ("佳能Cs." + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.CanonSi")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(12);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("佳能Si." + exifTagsMap.at(tag)) :
-                ("佳能Si." + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.CanonPi")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(12);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("佳能Pi." + exifTagsMap.at(tag)) :
-                ("佳能Pi." + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.CanonPa")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(12);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("佳能Pa." + exifTagsMap.at(tag)) :
-                ("佳能Pa." + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.Canon")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(10);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(10);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("佳能." + exifTagsMap.at(tag)) :
-                ("佳能." + tagName.substr(11));
-        }
-        else if (tagName.starts_with("Exif.Pentax")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(11);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(11);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("宾得." + exifTagsMap.at(tag)) :
-                ("宾得." + tagName.substr(12));
-        }
-        else if (tagName.starts_with("Exif.Fujifilm")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(13);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(13);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("富士." + exifTagsMap.at(tag)) :
-                ("富士." + tagName.substr(14));
-        }
-        else if (tagName.starts_with("Exif.Olympus")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(12);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("奥林巴斯." + exifTagsMap.at(tag)) :
-                ("奥林巴斯." + tagName.substr(13));
-        }
-        else if (tagName.starts_with("Exif.Panasonic")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(14);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(14);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("松下." + exifTagsMap.at(tag)) :
-                ("松下." + tagName.substr(15));
-        }
-        else if (tagName.starts_with("Exif.Sony1")) {
-            toEnd = true;
-            string tag = "Exif.Image" + tagName.substr(10);
-            if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(10);
-            translatedTagName = exifTagsMap.contains(tag) ?
-                ("索尼." + exifTagsMap.at(tag)) :
-                ("索尼." + tagName.substr(11));
+
+        if (GlobalVar::settingParameter.UI_LANG == 0) {
+            if (tagName.starts_with("Exif.SubImage")) {
+                string tag = "Exif.Image" + tagName.substr(14);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("子图" + tagName.substr(13, 2) + exifTagsMap.at(tag)) :
+                    ("子图" + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.Thumbnail")) {
+                string tag = "Exif.Image" + tagName.substr(14);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("缩略图." + exifTagsMap.at(tag)) :
+                    ("缩略图" + tagName.substr(14));
+            }
+            else if (tagName.starts_with("Exif.Nikon")) {
+                translatedTagName = "尼康" + tagName.substr(10);
+            }
+            else if (tagName.starts_with("Exif.CanonCs")) {
+                string tag = "Exif.Image" + tagName.substr(12);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("佳能Cs." + exifTagsMap.at(tag)) :
+                    ("佳能Cs." + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.CanonSi")) {
+                string tag = "Exif.Image" + tagName.substr(12);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("佳能Si." + exifTagsMap.at(tag)) :
+                    ("佳能Si." + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.CanonPi")) {
+                string tag = "Exif.Image" + tagName.substr(12);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("佳能Pi." + exifTagsMap.at(tag)) :
+                    ("佳能Pi." + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.CanonPa")) {
+                string tag = "Exif.Image" + tagName.substr(12);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("佳能Pa." + exifTagsMap.at(tag)) :
+                    ("佳能Pa." + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.Canon")) {
+                string tag = "Exif.Image" + tagName.substr(10);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(10);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("佳能." + exifTagsMap.at(tag)) :
+                    ("佳能." + tagName.substr(11));
+            }
+            else if (tagName.starts_with("Exif.Pentax")) {
+                string tag = "Exif.Image" + tagName.substr(11);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(11);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("宾得." + exifTagsMap.at(tag)) :
+                    ("宾得." + tagName.substr(12));
+            }
+            else if (tagName.starts_with("Exif.Fujifilm")) {
+                string tag = "Exif.Image" + tagName.substr(13);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(13);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("富士." + exifTagsMap.at(tag)) :
+                    ("富士." + tagName.substr(14));
+            }
+            else if (tagName.starts_with("Exif.Olympus")) {
+                string tag = "Exif.Image" + tagName.substr(12);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(12);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("奥林巴斯." + exifTagsMap.at(tag)) :
+                    ("奥林巴斯." + tagName.substr(13));
+            }
+            else if (tagName.starts_with("Exif.Panasonic")) {
+                string tag = "Exif.Image" + tagName.substr(14);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(14);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("松下." + exifTagsMap.at(tag)) :
+                    ("松下." + tagName.substr(15));
+            }
+            else if (tagName.starts_with("Exif.Sony1")) {
+                string tag = "Exif.Image" + tagName.substr(10);
+                if (!exifTagsMap.contains(tag))tag = "Exif.Photo" + tagName.substr(10);
+                translatedTagName = exifTagsMap.contains(tag) ?
+                    ("索尼." + exifTagsMap.at(tag)) :
+                    ("索尼." + tagName.substr(11));
+            }
+            else {
+                toEnd = false;
+                translatedTagName = exifTagsMap.contains(tagName) ? exifTagsMap.at(tagName) : tagName;
+            }
         }
         else {
-            toEnd = false;
-            translatedTagName = exifTagsMap.contains(tagName) ? exifTagsMap.at(tagName) : tagName;
+            translatedTagName = tagName;
         }
 
         std::string tagValue;
@@ -197,10 +183,10 @@ std::string ExifParse::exifDataToString(wstring_view path, const Exiv2::ExifData
             if (tagValue.length() > 0) {
                 switch (tagValue[0])
                 {
-                case 'N':tagValue = "北纬 " + tagValue; break;
-                case 'S':tagValue = "南纬 " + tagValue; break;
-                case 'E':tagValue = "东经 " + tagValue; break;
-                case 'W':tagValue = "西经 " + tagValue; break;
+                case 'N':tagValue = getUIString(47); break;
+                case 'S':tagValue = getUIString(48); break;
+                case 'E':tagValue = getUIString(49); break;
+                case 'W':tagValue = getUIString(50); break;
                 }
             }
         }
@@ -232,23 +218,44 @@ std::string ExifParse::exifDataToString(wstring_view path, const Exiv2::ExifData
             }
         }
         else if (tagName == "Exif.Photo.UserComment") { // 可能包含AI生图prompt信息
+            bool isPrompt = false;
             auto a = tag.value().clone();
             vector<uint8_t> buf(a->size());
             a->copy(buf.data(), Exiv2::ByteOrder::bigEndian);
             if (!memcmp(buf.data(), "UNICODE\0", 8)) {
                 wstring_view str((wchar_t*)(buf.data() + 8), (buf.size() - 8) / 2);
                 tagValue = jarkUtils::wstringToUtf8(str);
-                auto idx = tagValue.find("\nNegative prompt");
+                auto idx = tagValue.find("\nNegative prompt:");
                 if (idx != string::npos) {
-                    tagValue.replace(idx, 16, "\n\n反提示词");
-                    tagValue = "\n\n正提示词: " + tagValue;
+                    isPrompt = true;
+                    tagValue.replace(idx, 17, getUIString(44));
+                    tagValue = getUIString(43) + tagValue;
                 }
 
                 idx = tagValue.find("\nSteps:");
                 if (idx != string::npos) {
-                    tagValue.replace(idx, 7, "\n\n参数: Steps:");
+                    isPrompt = true;
+                    tagValue.replace(idx, 7, getUIString(45));
                 }
             }
+
+            if(!isPrompt){
+                a->copy(buf.data(), Exiv2::ByteOrder::littleEndian);
+                if (!memcmp(buf.data(), "UNICODE\0", 8)) {
+                    wstring_view str((wchar_t*)(buf.data() + 8), (buf.size() - 8) / 2);
+                    tagValue = jarkUtils::wstringToUtf8(str);
+                }
+                else {
+                    tagValue = string(buf.begin(), buf.end());
+                }
+            }
+        }
+        else if (exifTagsUnicodeStr.contains(tagName)) {
+            auto a = tag.value().clone();
+            vector<WCHAR> buf(a->size()/2+1, 0);
+            a->copy((uint8_t*)buf.data(), Exiv2::ByteOrder::littleEndian);
+            wstring_view str(buf.data(), buf.size());
+            tagValue = jarkUtils::wstringToUtf8(str);            
         }
         else if (2 < tagValue.length() && tagValue.length() < 100) {
             auto res = handleMathDiv(tagValue);
@@ -307,23 +314,23 @@ std::string ExifParse::AI_Prompt(wstring_view path, const uint8_t* buf) {
 
         auto idx = prompt.find("parameters");
         if (idx != string::npos) {
-            prompt.replace(idx, 11, "\n正提示词: ");
+            prompt.replace(idx, 11, getUIString(43));
         }
         else {
-            prompt = "\n正提示词: " + prompt;
+            prompt = getUIString(43) + prompt;
         }
 
         idx = prompt.find("Negative prompt");
         if (idx != string::npos) {
-            prompt.replace(idx, 16, "\n反提示词: ");
+            prompt.replace(idx, 16, getUIString(44));
         }
 
         idx = prompt.find("\nSteps:");
         if (idx != string::npos) {
-            prompt.replace(idx, 7, "\n\n参数: Steps:");
+            prompt.replace(idx, 7, getUIString(45));
         }
 
-        return "\nAI生图提示词 Prompt:\n" + prompt;
+        return getUIString(46) + prompt;
     }
     else if (!strncmp((const char*)buf + 0x25, "iTXtparameters", 14)) {
         int length = (buf[0x21] << 24) + (buf[0x22] << 16) + (buf[0x23] << 8) + buf[0x24];
@@ -337,23 +344,23 @@ std::string ExifParse::AI_Prompt(wstring_view path, const uint8_t* buf) {
 
         auto idx = prompt.find("parameters");
         if (idx != string::npos) {
-            prompt.replace(idx, 11, "\n正提示词: ");
+            prompt.replace(idx, 11, getUIString(43));
         }
         else {
-            prompt = "\n正提示词: " + prompt;
+            prompt = getUIString(43) + prompt;
         }
 
         idx = prompt.find("\nNegative prompt");
         if (idx != string::npos) {
-            prompt.replace(idx, 16, "\n\n反提示词: ");
+            prompt.replace(idx, 16, getUIString(44));
         }
 
         idx = prompt.find("\nSteps:");
         if (idx != string::npos) {
-            prompt.replace(idx, 7, "\n\n参数: Steps:");
+            prompt.replace(idx, 7, getUIString(45));
         }
 
-        return "\nAI生图提示词 Prompt:\n" + prompt;
+        return getUIString(46) + prompt;
     }
     else if (!strncmp((const char*)buf + 0x25, "tEXtprompt", 10)) {
 
@@ -366,7 +373,7 @@ std::string ExifParse::AI_Prompt(wstring_view path, const uint8_t* buf) {
 
         prompt = jarkUtils::wstringToUtf8(jarkUtils::latin1ToWstring(prompt));
 
-        return "\nAI生图提示词 Prompt:\n" + prompt;
+        return getUIString(46) + prompt;
     }
 
     return "";
@@ -387,7 +394,7 @@ std::string ExifParse::getExif(wstring_view path, const uint8_t* buf, size_t fil
         string prompt = AI_Prompt(path, buf);
 
         if ((exifStr.length() + xmpStr.length() + iptcStr.length() + prompt.length()) > 0)
-            return  "\n\n【按 C 键复制图像全部信息】\n" + exifStr + xmpStr + iptcStr + prompt;
+            return  std::format("\n\n{}\n{}{}{}{}", getUIString(42), exifStr, xmpStr, iptcStr, prompt);
         else
             return "";
     }

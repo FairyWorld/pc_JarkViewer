@@ -28,15 +28,30 @@ void D2D1App::SafeRelease(Interface*& pInterfaceToRelease) {
 }
 
 void D2D1App::loadSettings() {
-    wchar_t appDataPath[MAX_PATH];
-    if (FAILED(SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, appDataPath)))
+    PWSTR appDataPath = nullptr;
+    if (FAILED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &appDataPath)))
         return;
 
     GlobalVar::settingPath = std::wstring(appDataPath) + L"\\JarkViewer.db";
+    CoTaskMemFree(appDataPath);
+    appDataPath = nullptr;
 
     auto f = _wfopen(GlobalVar::settingPath.c_str(), L"rb");
-    if (!f)
-        return;
+    if (!f) {
+        wchar_t exePath[MAX_PATH];
+        if (GetModuleFileNameW(NULL, exePath, MAX_PATH) <= 0)
+            return;
+
+        std::wstring exeDir = exePath;
+        size_t pos = exeDir.find_last_of(L"\\/");
+        if (pos == std::wstring::npos)
+            return;
+
+        GlobalVar::settingPath = exeDir.substr(0, pos) + L"\\JarkViewer.db";
+        f = _wfopen(GlobalVar::settingPath.c_str(), L"rb");
+        if (!f)
+            return;
+    }
 
     SettingParameter tmp;
     auto readLen = fread(&tmp, 1, sizeof(SettingParameter), f);

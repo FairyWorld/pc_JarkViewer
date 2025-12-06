@@ -36,7 +36,6 @@ private:
     TextDrawer textDrawer;
     cv::Mat printerRes, buttonPrint, buttonNormal, buttonInvert, trackbarBg;
     std::vector<cv::Mat> buttonColorMode;
-    SettingParameter *settingParameter = nullptr;
 
     static inline volatile bool requestExitFlag = false;
 
